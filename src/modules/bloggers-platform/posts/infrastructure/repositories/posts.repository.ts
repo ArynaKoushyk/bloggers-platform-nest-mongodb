@@ -4,9 +4,10 @@ import { Post } from '../../domain/post.entity';
 import type { PostDocument, PostModelType } from '../../domain/post.entity';
 import { DomainException } from '../../../../../core/exceptions/domain.exception';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-code.enum';
+import type { IPostsRepository } from '../../application/interfaces/posts.repository.interface';
 
 @Injectable()
-export class PostsRepository {
+export class PostsRepository implements IPostsRepository {
   constructor(@InjectModel(Post.name) private postModel: PostModelType) {}
 
   findById(id: string): Promise<PostDocument | null> {

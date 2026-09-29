@@ -166,5 +166,7 @@ UserSchema.index(
 
 UserSchema.loadClass(User);
 
-export type UserDocument = HydratedDocument<User>;
-export type UserModelType = Model<User> & typeof User;
+export type UserDocument = HydratedDocument<User> & {
+  readonly id: string;
+};
+export type UserModelType = Model<User, {}, {}, {}, UserDocument> & typeof User;

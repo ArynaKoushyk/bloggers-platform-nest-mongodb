@@ -1,11 +1,16 @@
 import { InjectModel } from '@nestjs/mongoose';
+import { Inject } from '@nestjs/common';
 import { Comment, type CommentModelType } from '../../domain/comment.entity';
 import { CreateCommentDto } from '../dto/create-comment.dto';
 import { UserContextDto } from '../../../../user-accounts/auth/application/dto/user-context.dto';
-import { CommentsRepository } from '../../infrastructure/repositories/comments.repository';
-import { PostsRepository } from '../../../posts/infrastructure/repositories/posts.repository';
 import { CreateCommentDomainDto } from '../../domain/dto/create-comment.domain.dto';
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import type { ICommentsRepository } from '../interfaces/comments.repository.interface';
+import type { IPostsRepository } from '../../../posts/application/interfaces/posts.repository.interface';
+import {
+  COMMENTS_REPOSITORY,
+  POSTS_REPOSITORY,
+} from '../../../tokens/repository.tokens';
 
 export class CreateCommentCommand extends Command<string> {
   constructor(
@@ -22,8 +27,10 @@ export class CreateCommentUseCase implements ICommandHandler<CreateCommentComman
   constructor(
     @InjectModel(Comment.name)
     private readonly commentModel: CommentModelType,
-    private readonly commentsRepository: CommentsRepository,
-    private readonly postsRepository: PostsRepository,
+    @Inject(COMMENTS_REPOSITORY)
+    private readonly commentsRepository: ICommentsRepository,
+    @Inject(POSTS_REPOSITORY)
+    private readonly postsRepository: IPostsRepository,
   ) {}
 
   async execute({ postId, dto, user }: CreateCommentCommand): Promise<string> {

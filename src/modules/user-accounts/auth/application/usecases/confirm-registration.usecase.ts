@@ -1,9 +1,11 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { Inject } from '@nestjs/common';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-code.enum';
 import { DomainException } from '../../../../../core/exceptions/domain.exception';
 import { ConfirmEmailError } from '../../../users/domain/enums/confirm-email-error.enum';
-import { UsersRepository } from '../../../users/infrastructure/repositories/users.repository';
 import { ConfirmRegistrationDto } from '../dto/confirm-registration.dto';
+import type { IUsersRepository } from '../../../users/application/interfaces/users.repository.interface';
+import { USERS_REPOSITORY } from '../../../tokens/repository.tokens';
 
 export class ConfirmRegistrationCommand extends Command<void> {
   constructor(public readonly dto: ConfirmRegistrationDto) {
@@ -13,7 +15,10 @@ export class ConfirmRegistrationCommand extends Command<void> {
 
 @CommandHandler(ConfirmRegistrationCommand)
 export class ConfirmRegistrationUseCase implements ICommandHandler<ConfirmRegistrationCommand> {
-  constructor(private usersRepository: UsersRepository) {}
+  constructor(
+    @Inject(USERS_REPOSITORY)
+    private readonly usersRepository: IUsersRepository,
+  ) {}
 
   async execute({ dto }: ConfirmRegistrationCommand): Promise<void> {
     const { code } = dto;

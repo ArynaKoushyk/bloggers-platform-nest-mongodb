@@ -1,6 +1,8 @@
-import { CommentsRepository } from '../../infrastructure/repositories/comments.repository';
 import { CommentAccessPolicy } from '../policies/comment-access.policy';
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { Inject } from '@nestjs/common';
+import type { ICommentsRepository } from '../interfaces/comments.repository.interface';
+import { COMMENTS_REPOSITORY } from '../../../tokens/repository.tokens';
 
 export class DeleteCommentCommand extends Command<void> {
   constructor(
@@ -14,7 +16,8 @@ export class DeleteCommentCommand extends Command<void> {
 @CommandHandler(DeleteCommentCommand)
 export class DeleteCommentUseCase implements ICommandHandler<DeleteCommentCommand> {
   constructor(
-    private readonly commentsRepository: CommentsRepository,
+    @Inject(COMMENTS_REPOSITORY)
+    private readonly commentsRepository: ICommentsRepository,
     private readonly commentAccessPolicy: CommentAccessPolicy,
   ) {}
 

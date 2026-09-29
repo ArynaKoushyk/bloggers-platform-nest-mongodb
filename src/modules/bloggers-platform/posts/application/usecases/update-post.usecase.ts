@@ -1,8 +1,13 @@
-import { PostsRepository } from '../../infrastructure/repositories/posts.repository';
-import { BlogsRepository } from '../../../blogs/infrastructure/repositories/blogs.repository';
 import { UpdatePostDto } from '../dto/update-post.dto';
 import { UpdatePostDomainDto } from '../../domain/dto/update-post.domain.dto';
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { Inject } from '@nestjs/common';
+import type { IPostsRepository } from '../interfaces/posts.repository.interface';
+import type { IBlogsRepository } from '../../../blogs/application/interfaces/blogs.repository.interface';
+import {
+  BLOGS_REPOSITORY,
+  POSTS_REPOSITORY,
+} from '../../../tokens/repository.tokens';
 
 export class UpdatePostCommand extends Command<void> {
   constructor(
@@ -16,8 +21,10 @@ export class UpdatePostCommand extends Command<void> {
 @CommandHandler(UpdatePostCommand)
 export class UpdatePostUseCase implements ICommandHandler<UpdatePostCommand> {
   constructor(
-    private readonly postsRepository: PostsRepository,
-    private readonly blogsRepository: BlogsRepository,
+    @Inject(POSTS_REPOSITORY)
+    private readonly postsRepository: IPostsRepository,
+    @Inject(BLOGS_REPOSITORY)
+    private readonly blogsRepository: IBlogsRepository,
   ) {}
 
   async execute({ id, dto }: UpdatePostCommand): Promise<void> {
@@ -31,7 +38,7 @@ export class UpdatePostUseCase implements ICommandHandler<UpdatePostCommand> {
       title,
       shortDescription,
       content,
-      blogId: blog._id.toString(),
+      blogId,
       blogName: blog.name,
     };
 

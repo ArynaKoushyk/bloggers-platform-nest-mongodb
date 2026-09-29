@@ -7,9 +7,10 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { DomainException } from '../../../../../core/exceptions/domain.exception';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-code.enum';
+import type { IUsersRepository } from '../../application/interfaces/users.repository.interface';
 
 @Injectable()
-export class UsersRepository {
+export class UsersRepository implements IUsersRepository {
   constructor(@InjectModel(User.name) private userModel: UserModelType) {}
 
   async save(user: UserDocument): Promise<void> {

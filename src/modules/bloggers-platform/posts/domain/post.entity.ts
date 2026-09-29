@@ -1,7 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
-import { DomainException } from '../../../../core/exceptions/domain.exception';
-import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-code.enum';
 import { CreatePostDomainDto } from './dto/create-post.domain.dto';
 import { UpdatePostDomainDto } from './dto/update-post.domain.dto';
 

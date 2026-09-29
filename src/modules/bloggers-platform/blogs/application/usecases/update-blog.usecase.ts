@@ -1,7 +1,9 @@
-import { BlogsRepository } from '../../infrastructure/repositories/blogs.repository';
 import { UpdateBlogDto } from '../dto/update-blog.dto';
 import { UpdateBlogDomainDto } from '../../domain/dto/update-blog.domain.dto';
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { Inject } from '@nestjs/common';
+import type { IBlogsRepository } from '../interfaces/blogs.repository.interface';
+import { BLOGS_REPOSITORY } from '../../../tokens/repository.tokens';
 
 export class UpdateBlogCommand extends Command<void> {
   constructor(
@@ -14,7 +16,10 @@ export class UpdateBlogCommand extends Command<void> {
 
 @CommandHandler(UpdateBlogCommand)
 export class UpdateBlogUseCase implements ICommandHandler<UpdateBlogCommand> {
-  constructor(private readonly blogsRepository: BlogsRepository) {}
+  constructor(
+    @Inject(BLOGS_REPOSITORY)
+    private readonly blogsRepository: IBlogsRepository,
+  ) {}
 
   async execute({ id, dto }: UpdateBlogCommand): Promise<void> {
     const blog = await this.blogsRepository.findByIdOrFail(id);

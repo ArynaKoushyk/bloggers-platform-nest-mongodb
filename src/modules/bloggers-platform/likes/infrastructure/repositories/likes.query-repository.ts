@@ -4,14 +4,15 @@ import { Like, type LikeModelType } from '../../domain/like.entity';
 import { LikeTargetType } from '../../domain/enums/like-target-type.enum';
 import { LikeStatus } from '../../domain/enums/like-status.enum';
 import { LikeDetailsViewDto } from '../../api/view-dto/like-details.view-dto';
+import type { ILikesQueryRepository } from '../../application/interfaces/likes.query-repository.interface';
 
 type LikeDetailsReadModel = Pick<
   Like,
-  'createdAt' | 'authorId' | 'authorLogin'
+  'targetId' | 'createdAt' | 'authorId' | 'authorLogin'
 >;
 
 @Injectable()
-export class LikesQueryRepository {
+export class LikesQueryRepository implements ILikesQueryRepository {
   constructor(
     @InjectModel(Like.name)
     private readonly likeModel: LikeModelType,
@@ -68,7 +69,7 @@ export class LikesQueryRepository {
     return statuses;
   }
 
-  async findLatestLikesForSingleTarget(
+  async findNewestLikesForSingleTarget(
     targetId: string,
     targetType: LikeTargetType,
   ): Promise<LikeDetailsViewDto[]> {
@@ -89,22 +90,50 @@ export class LikesQueryRepository {
     return likes.map((like) => this.mapToLikeDetails(like));
   }
 
-  async findLatestLikesForMultipleTargets(
+  async findNewestLikesForMultipleTargets(
     targetIds: string[],
     targetType: LikeTargetType,
   ): Promise<Map<string, LikeDetailsViewDto[]>> {
-    const latestLikesEntries = await Promise.all(
-      targetIds.map(async (targetId) => {
-        const latestLikes = await this.findLatestLikesForSingleTarget(
-          targetId,
-          targetType,
-        );
-
-        return [targetId, latestLikes] as const;
-      }),
+    const newestLikesByTarget = new Map<string, LikeDetailsViewDto[]>(
+      targetIds.map((targetId) => [targetId, []]),
     );
 
-    return new Map(latestLikesEntries);
+    if (targetIds.length === 0) {
+      return newestLikesByTarget;
+    }
+
+    const likes = await this.likeModel
+      .find({
+        targetId: { $in: targetIds },
+        targetType,
+        status: LikeStatus.Like,
+      })
+      .sort({
+        targetId: 1,
+        createdAt: -1,
+        _id: -1,
+      })
+      .select({
+        _id: 0,
+        targetId: 1,
+        authorId: 1,
+        authorLogin: 1,
+        createdAt: 1,
+      })
+      .lean<LikeDetailsReadModel[]>()
+      .exec();
+
+    for (const like of likes) {
+      const newestLikes = newestLikesByTarget.get(like.targetId);
+
+      if (!newestLikes || newestLikes.length >= 3) {
+        continue;
+      }
+
+      newestLikes.push(this.mapToLikeDetails(like));
+    }
+
+    return newestLikesByTarget;
   }
 
   private mapToLikeDetails(like: LikeDetailsReadModel): LikeDetailsViewDto {

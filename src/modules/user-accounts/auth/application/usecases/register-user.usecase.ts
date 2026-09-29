@@ -1,5 +1,4 @@
 import { RegisterUserDto } from '../dto/register-user.dto';
-import { UsersRepository } from '../../../users/infrastructure/repositories/users.repository';
 import { UsersFactory } from '../../../users/application/factories/users.factory';
 import {
   Command,
@@ -10,6 +9,9 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { UserRegisteredEvent } from '../events/user-registered.event';
+import { Inject } from '@nestjs/common';
+import type { IUsersRepository } from '../../../users/application/interfaces/users.repository.interface';
+import { USERS_REPOSITORY } from '../../../tokens/repository.tokens';
 
 export class RegisterUserCommand extends Command<void> {
   constructor(public readonly dto: RegisterUserDto) {
@@ -19,7 +21,8 @@ export class RegisterUserCommand extends Command<void> {
 @CommandHandler(RegisterUserCommand)
 export class RegisterUserUseCase implements ICommandHandler<RegisterUserCommand> {
   constructor(
-    private usersRepository: UsersRepository,
+    @Inject(USERS_REPOSITORY)
+    private readonly usersRepository: IUsersRepository,
     private readonly usersFactory: UsersFactory,
     private readonly configService: ConfigService,
     private readonly eventBus: EventBus,

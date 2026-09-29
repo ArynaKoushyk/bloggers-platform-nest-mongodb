@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import { UsersRepository } from '../../../users/infrastructure/repositories/users.repository';
+import { Inject } from '@nestjs/common';
 import { StartPasswordRecoveryDto } from '../dto/start-password-recovery.dto';
 import { randomUUID } from 'crypto';
 import {
@@ -9,6 +9,8 @@ import {
   ICommandHandler,
 } from '@nestjs/cqrs';
 import { RecoveryCodeCreatedEvent } from '../events/recovery-code-created.event';
+import type { IUsersRepository } from '../../../users/application/interfaces/users.repository.interface';
+import { USERS_REPOSITORY } from '../../../tokens/repository.tokens';
 
 export class RequestPasswordRecoveryCommand extends Command<void> {
   constructor(public readonly dto: StartPasswordRecoveryDto) {
@@ -19,7 +21,8 @@ export class RequestPasswordRecoveryCommand extends Command<void> {
 @CommandHandler(RequestPasswordRecoveryCommand)
 export class RequestPasswordRecoveryUseCase implements ICommandHandler<RequestPasswordRecoveryCommand> {
   constructor(
-    private readonly usersRepository: UsersRepository,
+    @Inject(USERS_REPOSITORY)
+    private readonly usersRepository: IUsersRepository,
     private readonly configService: ConfigService,
     private readonly eventBus: EventBus,
   ) {}

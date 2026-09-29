@@ -1,18 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { MeViewDto } from '../../api/view-dto/me.view-dto';
 import { User, type UserModelType } from '../../../users/domain/user.entity';
 import { DomainException } from '../../../../../core/exceptions/domain.exception';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-code.enum';
+import { CurrentUserReadModel } from '../../application/read-models/current-user.read-model';
+import type { IAuthQueryRepository } from '../../application/interfaces/auth.query-repository.interface';
 
 @Injectable()
-export class AuthQueryRepository {
+export class AuthQueryRepository implements IAuthQueryRepository {
   constructor(
     @InjectModel(User.name)
     private readonly userModel: UserModelType,
   ) {}
 
-  async findCurrentUserByIdOrFail(userId: string): Promise<MeViewDto> {
+  async findCurrentUserByIdOrFail(
+    userId: string,
+  ): Promise<CurrentUserReadModel> {
     const user = await this.userModel
       .findOne({
         _id: userId,
@@ -28,6 +31,10 @@ export class AuthQueryRepository {
       });
     }
 
-    return MeViewDto.mapToView(user);
+    return {
+      userId: user._id.toString(),
+      login: user.login,
+      email: user.email,
+    };
   }
 }

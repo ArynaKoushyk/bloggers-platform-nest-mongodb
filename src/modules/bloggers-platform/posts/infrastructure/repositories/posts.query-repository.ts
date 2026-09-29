@@ -3,18 +3,19 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Post } from '../../domain/post.entity';
 import type { PostModelType } from '../../domain/post.entity';
 import { GetPostsQueryParams } from '../../api/input-dto/get-posts-query-params.input-dto';
-import { PaginatedViewDto } from '../../../../../core/dto/base-paginated.view-dto';
-import { PostViewDto } from '../../api/view-dto/post.view-dto';
 import { FilterQuery } from 'mongoose';
 import { DomainException } from '../../../../../core/exceptions/domain.exception';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-code.enum';
+import {
+  PostReadModel,
+  PostsPageReadModel,
+} from '../../application/read-models/post.read-model';
+import type { IPostsQueryRepository } from '../../application/interfaces/posts.query-repository.interface';
 @Injectable()
-export class PostsQueryRepository {
+export class PostsQueryRepository implements IPostsQueryRepository {
   constructor(@InjectModel(Post.name) private postModel: PostModelType) {}
 
-  async findAll(
-    query: GetPostsQueryParams,
-  ): Promise<PaginatedViewDto<PostViewDto[]>> {
+  async findAll(query: GetPostsQueryParams): Promise<PostsPageReadModel> {
     const { pageNumber, pageSize, sortBy, sortDirection } = query;
     const skip = query.calculateSkip();
     const limit = pageSize;
@@ -31,17 +32,28 @@ export class PostsQueryRepository {
       .exec();
 
     const totalCount = await this.postModel.countDocuments(filter);
-    const items = posts.map((p) => PostViewDto.mapToView(p));
 
-    return PaginatedViewDto.mapToView({
-      items,
+    const postReadModels: PostReadModel[] = posts.map((post) => ({
+      id: post._id.toString(),
+      title: post.title,
+      shortDescription: post.shortDescription,
+      content: post.content,
+      createdAt: post.createdAt,
+      blogId: post.blogId,
+      blogName: post.blogName,
+      likesCount: post.likesCount,
+      dislikesCount: post.dislikesCount,
+    }));
+
+    return {
+      items: postReadModels,
       page: pageNumber,
-      size: pageSize,
+      pageSize,
       totalCount,
-    });
+    };
   }
 
-  async findByIdOrFail(id: string): Promise<PostViewDto> {
+  async findByIdOrFail(id: string): Promise<PostReadModel> {
     const post = await this.postModel
       .findOne({
         _id: id,
@@ -55,13 +67,25 @@ export class PostsQueryRepository {
         message: 'Post not found ',
       });
     }
-    return PostViewDto.mapToView(post);
+    const postReadModel: PostReadModel = {
+      id: post._id.toString(),
+      title: post.title,
+      shortDescription: post.shortDescription,
+      content: post.content,
+      createdAt: post.createdAt,
+      blogId: post.blogId,
+      blogName: post.blogName,
+      likesCount: post.likesCount,
+      dislikesCount: post.dislikesCount,
+    };
+
+    return postReadModel;
   }
 
   async findAllByBlogId(
     blogId: string,
     query: GetPostsQueryParams,
-  ): Promise<PaginatedViewDto<PostViewDto[]>> {
+  ): Promise<PostsPageReadModel> {
     const { pageNumber, pageSize, sortBy, sortDirection } = query;
     const skip = query.calculateSkip();
     const limit = pageSize;
@@ -75,14 +99,24 @@ export class PostsQueryRepository {
       .lean()
       .exec();
 
-    const items = posts.map((p) => PostViewDto.mapToView(p));
+    const postReadModels: PostReadModel[] = posts.map((post) => ({
+      id: post._id.toString(),
+      title: post.title,
+      shortDescription: post.shortDescription,
+      content: post.content,
+      createdAt: post.createdAt,
+      blogId: post.blogId,
+      blogName: post.blogName,
+      likesCount: post.likesCount,
+      dislikesCount: post.dislikesCount,
+    }));
 
     const totalCount = await this.postModel.countDocuments(filter);
-    return PaginatedViewDto.mapToView({
-      items,
+    return {
+      items: postReadModels,
       page: pageNumber,
-      size: pageSize,
+      pageSize,
       totalCount,
-    });
+    };
   }
 }

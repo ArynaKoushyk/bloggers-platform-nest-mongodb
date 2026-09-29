@@ -1,15 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { GetCommentsQueryParams } from '../../api/input-dto/get-comments-query-params.input-dto';
-import { PaginatedViewDto } from '../../../../../core/dto/base-paginated.view-dto';
-import { CommentViewDto } from '../../api/view-dto/comment.view-dto';
 import { FilterQuery } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Comment, type CommentModelType } from '../../domain/comment.entity';
 import { DomainException } from '../../../../../core/exceptions/domain.exception';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-code.enum';
+import {
+  CommentReadModel,
+  CommentsPageReadModel,
+} from '../../application/read-models/comment.read-model';
+import type { ICommentsQueryRepository } from '../../application/interfaces/comments.query-repository.interface';
 
 @Injectable()
-export class CommentsQueryRepository {
+export class CommentsQueryRepository implements ICommentsQueryRepository {
   constructor(
     @InjectModel(Comment.name) private commentModel: CommentModelType,
   ) {}
@@ -17,7 +20,7 @@ export class CommentsQueryRepository {
   async findAllByPostId(
     postId: string,
     query: GetCommentsQueryParams,
-  ): Promise<PaginatedViewDto<CommentViewDto[]>> {
+  ): Promise<CommentsPageReadModel> {
     const { pageNumber, pageSize, sortBy, sortDirection } = query;
     const skip = query.calculateSkip();
     const limit = pageSize;
@@ -32,15 +35,24 @@ export class CommentsQueryRepository {
       .exec();
 
     const totalCount = await this.commentModel.countDocuments(filter).exec();
-    const items = comments.map((comment) => CommentViewDto.mapToView(comment));
-    return PaginatedViewDto.mapToView({
-      items,
+
+    const commentReadModels: CommentReadModel[] = comments.map((comment) => ({
+      id: comment._id.toString(),
+      postId: comment.postId,
+      content: comment.content,
+      commentatorInfo: comment.commentatorInfo,
+      createdAt: comment.createdAt,
+      likesCount: comment.likesCount,
+      dislikesCount: comment.dislikesCount,
+    }));
+    return {
+      items: commentReadModels,
       page: pageNumber,
-      size: pageSize,
+      pageSize,
       totalCount,
-    });
+    };
   }
-  async findByIdOrFail(id: string): Promise<CommentViewDto> {
+  async findByIdOrFail(id: string): Promise<CommentReadModel> {
     const comment = await this.commentModel
       .findOne({
         _id: id,
@@ -55,6 +67,14 @@ export class CommentsQueryRepository {
         message: 'Comment not found ',
       });
     }
-    return CommentViewDto.mapToView(comment);
+    return {
+      id: comment._id.toString(),
+      postId: comment.postId,
+      content: comment.content,
+      commentatorInfo: comment.commentatorInfo,
+      createdAt: comment.createdAt,
+      likesCount: comment.likesCount,
+      dislikesCount: comment.dislikesCount,
+    };
   }
 }

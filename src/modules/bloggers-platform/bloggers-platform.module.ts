@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, type Provider } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Blog, BlogSchema } from './blogs/domain/blog.entity';
 import { BlogsRepository } from './blogs/infrastructure/repositories/blogs.repository';
@@ -35,6 +35,16 @@ import { GetPostCommentsQueryHandler } from './comments/application/queries/get-
 import { Like, LikeSchema } from './likes/domain/like.entity';
 import { LikesRepository } from './likes/infrastructure/repositories/likes.repository';
 import { LikesQueryRepository } from './likes/infrastructure/repositories/likes.query-repository';
+import {
+  BLOGS_QUERY_REPOSITORY,
+  BLOGS_REPOSITORY,
+  COMMENTS_QUERY_REPOSITORY,
+  COMMENTS_REPOSITORY,
+  LIKES_QUERY_REPOSITORY,
+  LIKES_REPOSITORY,
+  POSTS_QUERY_REPOSITORY,
+  POSTS_REPOSITORY,
+} from './tokens/repository.tokens';
 
 const useCases = [
   // Blogs
@@ -67,23 +77,46 @@ const queryHandlers = [
   GetCommentByIdQueryHandler,
   GetPostCommentsQueryHandler,
 ];
-
-const repositories = [
+const repositoryProviders = [
   // Blogs
-  BlogsRepository,
-  BlogsQueryRepository,
+  {
+    provide: BLOGS_REPOSITORY,
+    useClass: BlogsRepository,
+  },
+  {
+    provide: BLOGS_QUERY_REPOSITORY,
+    useClass: BlogsQueryRepository,
+  },
 
   // Posts
-  PostsRepository,
-  PostsQueryRepository,
+  {
+    provide: POSTS_REPOSITORY,
+    useClass: PostsRepository,
+  },
+  {
+    provide: POSTS_QUERY_REPOSITORY,
+    useClass: PostsQueryRepository,
+  },
 
   // Comments
-  CommentsRepository,
-  CommentsQueryRepository,
+  {
+    provide: COMMENTS_REPOSITORY,
+    useClass: CommentsRepository,
+  },
+  {
+    provide: COMMENTS_QUERY_REPOSITORY,
+    useClass: CommentsQueryRepository,
+  },
 
   // Likes
-  LikesRepository,
-  LikesQueryRepository,
+  {
+    provide: LIKES_REPOSITORY,
+    useClass: LikesRepository,
+  },
+  {
+    provide: LIKES_QUERY_REPOSITORY,
+    useClass: LikesQueryRepository,
+  },
 ];
 
 const policies = [CommentAccessPolicy];
@@ -118,7 +151,12 @@ const policies = [CommentAccessPolicy];
     CommentsController,
     PostCommentsController,
   ],
-  providers: [...useCases, ...queryHandlers, ...repositories, ...policies],
+  providers: [
+    ...useCases,
+    ...queryHandlers,
+    ...repositoryProviders,
+    ...policies,
+  ],
   exports: [],
 })
 export class BloggersPlatformModule {}

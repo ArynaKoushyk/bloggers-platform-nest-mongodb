@@ -1,15 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import { UsersRepository } from '../../users/infrastructure/repositories/users.repository';
+import { Inject, Injectable } from '@nestjs/common';
 import { PasswordHashAdapter } from '../../users/infrastructure/adapters/password-hash.adapter';
 import { UserContextDto } from './dto/user-context.dto';
 import { DomainException } from '../../../../core/exceptions/domain.exception';
 import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-code.enum';
+import type { IUsersRepository } from '../../users/application/interfaces/users.repository.interface';
+import { USERS_REPOSITORY } from '../../tokens/repository.tokens';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersRepository: UsersRepository,
-    private passwordHashAdapter: PasswordHashAdapter,
+    @Inject(USERS_REPOSITORY)
+    private readonly usersRepository: IUsersRepository,
+    private readonly passwordHashAdapter: PasswordHashAdapter,
   ) {}
 
   async validateCredentials(
@@ -36,7 +38,7 @@ export class AuthService {
     }
 
     return {
-      id: user._id.toString(),
+      id: user.id,
       login: user.login,
     };
   }

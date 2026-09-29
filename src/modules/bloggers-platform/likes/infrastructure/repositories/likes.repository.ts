@@ -6,9 +6,10 @@ import {
   type LikeModelType,
 } from '../../domain/like.entity';
 import { InjectModel } from '@nestjs/mongoose';
+import type { ILikesRepository } from '../../application/interfaces/likes.repository.interface';
 
 @Injectable()
-export class LikesRepository {
+export class LikesRepository implements ILikesRepository {
   constructor(
     @InjectModel(Like.name)
     private readonly likeModel: LikeModelType,

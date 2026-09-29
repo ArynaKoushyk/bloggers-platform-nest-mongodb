@@ -1,10 +1,15 @@
 import { Post, type PostModelType } from '../../domain/post.entity';
-import { PostsRepository } from '../../infrastructure/repositories/posts.repository';
-import { BlogsRepository } from '../../../blogs/infrastructure/repositories/blogs.repository';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { CreatePostDomainDto } from '../../domain/dto/create-post.domain.dto';
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { Inject } from '@nestjs/common';
+import type { IPostsRepository } from '../interfaces/posts.repository.interface';
+import type { IBlogsRepository } from '../../../blogs/application/interfaces/blogs.repository.interface';
+import {
+  BLOGS_REPOSITORY,
+  POSTS_REPOSITORY,
+} from '../../../tokens/repository.tokens';
 
 export class CreatePostCommand extends Command<string> {
   constructor(public readonly dto: CreatePostDto) {
@@ -17,8 +22,10 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
   constructor(
     @InjectModel(Post.name)
     private readonly postModel: PostModelType,
-    private readonly postsRepository: PostsRepository,
-    private readonly blogsRepository: BlogsRepository,
+    @Inject(POSTS_REPOSITORY)
+    private readonly postsRepository: IPostsRepository,
+    @Inject(BLOGS_REPOSITORY)
+    private readonly blogsRepository: IBlogsRepository,
   ) {}
 
   async execute({ dto }: CreatePostCommand): Promise<string> {
@@ -30,7 +37,7 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
       title,
       shortDescription,
       content,
-      blogId: blog._id.toString(),
+      blogId,
       blogName: blog.name,
     };
 

@@ -1,9 +1,11 @@
 import { Query } from '@nestjs/cqrs';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { AuthQueryRepository } from '../../infrastructure/repositories/auth.query-repository';
-import { MeViewDto } from '../../api/view-dto/me.view-dto';
+import { Inject } from '@nestjs/common';
+import { CurrentUserViewDto } from '../../api/view-dto/current-user.view-dto';
+import type { IAuthQueryRepository } from '../interfaces/auth.query-repository.interface';
+import { AUTH_QUERY_REPOSITORY } from '../../../tokens/repository.tokens';
 
-export class GetCurrentUserQuery extends Query<MeViewDto> {
+export class GetCurrentUserQuery extends Query<CurrentUserViewDto> {
   constructor(public readonly userId: string) {
     super();
   }
@@ -11,9 +13,12 @@ export class GetCurrentUserQuery extends Query<MeViewDto> {
 
 @QueryHandler(GetCurrentUserQuery)
 export class GetCurrentUserQueryHandler implements IQueryHandler<GetCurrentUserQuery> {
-  constructor(private readonly authQueryRepository: AuthQueryRepository) {}
+  constructor(
+    @Inject(AUTH_QUERY_REPOSITORY)
+    private readonly authQueryRepository: IAuthQueryRepository,
+  ) {}
 
-  execute({ userId }: GetCurrentUserQuery): Promise<MeViewDto> {
+  execute({ userId }: GetCurrentUserQuery): Promise<CurrentUserViewDto> {
     return this.authQueryRepository.findCurrentUserByIdOrFail(userId);
   }
 }

@@ -4,9 +4,10 @@ import type { BlogDocument, BlogModelType } from '../../domain/blog.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { DomainException } from '../../../../../core/exceptions/domain.exception';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-code.enum';
+import type { IBlogsRepository } from '../../application/interfaces/blogs.repository.interface';
 
 @Injectable()
-export class BlogsRepository {
+export class BlogsRepository implements IBlogsRepository {
   constructor(@InjectModel(Blog.name) private blogModel: BlogModelType) {}
 
   findById(id: string): Promise<BlogDocument | null> {

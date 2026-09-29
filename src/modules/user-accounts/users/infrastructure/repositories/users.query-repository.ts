@@ -2,19 +2,20 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, type UserModelType } from '../../domain/user.entity';
 import { GetUsersQueryParams } from '../../api/input-dto/get-users-query-params.input-dto';
-import { PaginatedViewDto } from '../../../../../core/dto/base-paginated.view-dto';
-import { UserViewDto } from '../../api/view-dto/user.view-dto';
 import { FilterQuery } from 'mongoose';
 import { DomainException } from '../../../../../core/exceptions/domain.exception';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-code.enum';
+import {
+  UserReadModel,
+  UsersPageReadModel,
+} from '../../application/read-models/user.read-model';
+import type { IUsersQueryRepository } from '../../application/interfaces/users.query-repository.interface';
 
 @Injectable()
-export class UsersQueryRepository {
+export class UsersQueryRepository implements IUsersQueryRepository {
   constructor(@InjectModel(User.name) private userModel: UserModelType) {}
 
-  async findAll(
-    query: GetUsersQueryParams,
-  ): Promise<PaginatedViewDto<UserViewDto[]>> {
+  async findAll(query: GetUsersQueryParams): Promise<UsersPageReadModel> {
     const {
       pageNumber,
       pageSize,
@@ -60,16 +61,22 @@ export class UsersQueryRepository {
 
     const totalCount = await this.userModel.countDocuments(filter).exec();
 
-    const items = users.map((u) => UserViewDto.mapToView(u));
-    return PaginatedViewDto.mapToView({
-      items,
+    const userReadModels: UserReadModel[] = users.map((user) => ({
+      id: user._id.toString(),
+      login: user.login,
+      email: user.email,
+      createdAt: user.createdAt,
+    }));
+
+    return {
+      items: userReadModels,
       page: pageNumber,
-      size: pageSize,
+      pageSize,
       totalCount,
-    });
+    };
   }
 
-  async findByIdOrFail(id: string): Promise<UserViewDto> {
+  async findByIdOrFail(id: string): Promise<UserReadModel> {
     const user = await this.userModel
       .findOne({
         _id: id,
@@ -83,6 +90,11 @@ export class UsersQueryRepository {
         message: 'User not found',
       });
     }
-    return UserViewDto.mapToView(user);
+    return {
+      id: user._id.toString(),
+      login: user.login,
+      email: user.email,
+      createdAt: user.createdAt,
+    };
   }
 }

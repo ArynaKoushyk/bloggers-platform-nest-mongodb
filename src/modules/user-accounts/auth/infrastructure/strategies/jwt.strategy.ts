@@ -1,18 +1,20 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { UserContextDto } from '../../application/dto/user-context.dto';
 import { ConfigService } from '@nestjs/config';
 import { AccessTokenPayload } from '../../application/types/access-token-payload.type';
-import { UsersRepository } from '../../../users/infrastructure/repositories/users.repository';
 import { DomainException } from '../../../../../core/exceptions/domain.exception';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-code.enum';
+import type { IUsersRepository } from '../../../users/application/interfaces/users.repository.interface';
+import { USERS_REPOSITORY } from '../../../tokens/repository.tokens';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     configService: ConfigService,
-    private readonly usersRepository: UsersRepository,
+    @Inject(USERS_REPOSITORY)
+    private readonly usersRepository: IUsersRepository,
   ) {
     const accessSecretKey = configService.getOrThrow<string>(
       'ACCESS_TOKEN_SECRET',
@@ -35,7 +37,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     }
 
     return {
-      id: user._id.toString(),
+      id: user.id,
       login: user.login,
     };
   }

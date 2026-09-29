@@ -1,10 +1,12 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { Inject } from '@nestjs/common';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-code.enum';
 import { DomainException } from '../../../../../core/exceptions/domain.exception';
 import { PasswordHashAdapter } from '../../../users/infrastructure/adapters/password-hash.adapter';
 import { ResetPasswordError } from '../../../users/domain/enums/reset-password-error.enum';
-import { UsersRepository } from '../../../users/infrastructure/repositories/users.repository';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
+import type { IUsersRepository } from '../../../users/application/interfaces/users.repository.interface';
+import { USERS_REPOSITORY } from '../../../tokens/repository.tokens';
 
 export class ResetPasswordCommand extends Command<void> {
   constructor(public readonly dto: ResetPasswordDto) {
@@ -15,7 +17,8 @@ export class ResetPasswordCommand extends Command<void> {
 @CommandHandler(ResetPasswordCommand)
 export class ResetPasswordUseCase implements ICommandHandler<ResetPasswordCommand> {
   constructor(
-    private readonly usersRepository: UsersRepository,
+    @Inject(USERS_REPOSITORY)
+    private readonly usersRepository: IUsersRepository,
     private readonly passwordHashAdapter: PasswordHashAdapter,
   ) {}
 

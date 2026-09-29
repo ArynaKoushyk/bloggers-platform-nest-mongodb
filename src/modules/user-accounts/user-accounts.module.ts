@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, type Provider } from '@nestjs/common';
 import { UsersController } from './users/api/users.controller';
 import { UsersQueryRepository } from './users/infrastructure/repositories/users.query-repository';
 import { UsersRepository } from './users/infrastructure/repositories/users.repository';
@@ -26,6 +26,11 @@ import { ConfirmRegistrationUseCase } from './auth/application/usecases/confirm-
 import { ResendConfirmationEmailUseCase } from './auth/application/usecases/resend-confirmation-email.usecase';
 import { RequestPasswordRecoveryUseCase } from './auth/application/usecases/request-password-recovery.usecase';
 import { ResetPasswordUseCase } from './auth/application/usecases/reset-password.usecase';
+import {
+  AUTH_QUERY_REPOSITORY,
+  USERS_QUERY_REPOSITORY,
+  USERS_REPOSITORY,
+} from './tokens/repository.tokens';
 
 const useCases = [
   CreateUserUseCase,
@@ -44,10 +49,19 @@ const queryHandlers = [
   GetCurrentUserQueryHandler,
 ];
 
-const repositories = [
-  UsersQueryRepository,
-  UsersRepository,
-  AuthQueryRepository,
+const repositoryProviders = [
+  {
+    provide: USERS_REPOSITORY,
+    useClass: UsersRepository,
+  },
+  {
+    provide: USERS_QUERY_REPOSITORY,
+    useClass: UsersQueryRepository,
+  },
+  {
+    provide: AUTH_QUERY_REPOSITORY,
+    useClass: AuthQueryRepository,
+  },
 ];
 
 const factories = [UsersFactory];
@@ -68,7 +82,7 @@ const factories = [UsersFactory];
   providers: [
     ...useCases,
     ...queryHandlers,
-    ...repositories,
+    ...repositoryProviders,
     ...factories,
     AuthService,
     PasswordHashAdapter,

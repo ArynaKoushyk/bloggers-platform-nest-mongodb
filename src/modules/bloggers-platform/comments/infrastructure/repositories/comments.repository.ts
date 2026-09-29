@@ -7,9 +7,10 @@ import {
 } from '../../domain/comment.entity';
 import { DomainException } from '../../../../../core/exceptions/domain.exception';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-code.enum';
+import type { ICommentsRepository } from '../../application/interfaces/comments.repository.interface';
 
 @Injectable()
-export class CommentsRepository {
+export class CommentsRepository implements ICommentsRepository {
   constructor(
     @InjectModel(Comment.name) private commentModel: CommentModelType,
   ) {}

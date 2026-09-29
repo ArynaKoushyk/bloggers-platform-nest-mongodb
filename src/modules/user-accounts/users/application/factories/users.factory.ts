@@ -1,24 +1,26 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   User,
   type UserDocument,
   type UserModelType,
 } from '../../domain/user.entity';
-import { UsersRepository } from '../../infrastructure/repositories/users.repository';
 import { PasswordHashAdapter } from '../../infrastructure/adapters/password-hash.adapter';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { CreateUserDomainDto } from '../../domain/dto/create-user.domain.dto';
 import { CreateUnconfirmedUserDomainDto } from '../../domain/dto/create-unconfirmed-user.domain.dto';
 import { DomainException } from '../../../../../core/exceptions/domain.exception';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-code.enum';
+import type { IUsersRepository } from '../interfaces/users.repository.interface';
+import { USERS_REPOSITORY } from '../../../tokens/repository.tokens';
 
 @Injectable()
 export class UsersFactory {
   constructor(
     @InjectModel(User.name)
     private readonly userModel: UserModelType,
-    private readonly usersRepository: UsersRepository,
+    @Inject(USERS_REPOSITORY)
+    private readonly usersRepository: IUsersRepository,
     private readonly passwordHashAdapter: PasswordHashAdapter,
   ) {}
 

@@ -11,8 +11,7 @@ import { AuthService } from '../application/auth.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { CurrentUser } from '../decorators/param/current-user.decorator';
 import { UserContextDto } from '../application/dto/user-context.dto';
-import { AuthQueryRepository } from '../infrastructure/repositories/auth.query-repository';
-import { MeViewDto } from './view-dto/me.view-dto';
+import { CurrentUserViewDto } from './view-dto/current-user.view-dto';
 import { JwtAuthGuard } from '../guards/jwt/jwt-auth.guard';
 import { RegisterUserInputDto } from './input-dto/register-user.input-dto';
 import { ResendRegistrationConfirmationEmailInputDto } from './input-dto/resend-registration-confirmation-email.input-dto';
@@ -35,7 +34,6 @@ export class AuthController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
-    private readonly authQueryRepository: AuthQueryRepository,
     private readonly authService: AuthService,
   ) {}
 
@@ -88,7 +86,9 @@ export class AuthController {
   @ApiBearerAuth()
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  getCurrentUser(@CurrentUser() user: UserContextDto): Promise<MeViewDto> {
+  getCurrentUser(
+    @CurrentUser() user: UserContextDto,
+  ): Promise<CurrentUserViewDto> {
     return this.queryBus.execute(new GetCurrentUserQuery(user.id));
   }
 }

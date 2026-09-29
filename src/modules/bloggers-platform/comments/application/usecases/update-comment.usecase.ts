@@ -1,8 +1,10 @@
-import { CommentsRepository } from '../../infrastructure/repositories/comments.repository';
 import { CommentAccessPolicy } from '../policies/comment-access.policy';
 import { UpdateCommentDto } from '../dto/update-comment.dto';
 import { UpdateCommentDomainDto } from '../../domain/dto/update-comment.domain.dto';
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { Inject } from '@nestjs/common';
+import type { ICommentsRepository } from '../interfaces/comments.repository.interface';
+import { COMMENTS_REPOSITORY } from '../../../tokens/repository.tokens';
 
 export class UpdateCommentCommand extends Command<void> {
   constructor(
@@ -17,7 +19,8 @@ export class UpdateCommentCommand extends Command<void> {
 @CommandHandler(UpdateCommentCommand)
 export class UpdateCommentUseCase implements ICommandHandler<UpdateCommentCommand> {
   constructor(
-    private readonly commentsRepository: CommentsRepository,
+    @Inject(COMMENTS_REPOSITORY)
+    private readonly commentsRepository: ICommentsRepository,
     private readonly commentAccessPolicy: CommentAccessPolicy,
   ) {}
 
