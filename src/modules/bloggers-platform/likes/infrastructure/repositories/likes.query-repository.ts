@@ -3,13 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Like, type LikeModelType } from '../../domain/like.entity';
 import { LikeTargetType } from '../../domain/enums/like-target-type.enum';
 import { LikeStatus } from '../../domain/enums/like-status.enum';
-import { LikeDetailsViewDto } from '../../api/view-dto/like-details.view-dto';
 import type { ILikesQueryRepository } from '../../application/interfaces/likes.query-repository.interface';
-
-type LikeDetailsReadModel = Pick<
-  Like,
-  'targetId' | 'createdAt' | 'authorId' | 'authorLogin'
->;
+import { LikeDetailsReadModel } from '../../application/read-models/like.read-model';
 
 @Injectable()
 export class LikesQueryRepository implements ILikesQueryRepository {
@@ -72,7 +67,7 @@ export class LikesQueryRepository implements ILikesQueryRepository {
   async findNewestLikesForSingleTarget(
     targetId: string,
     targetType: LikeTargetType,
-  ): Promise<LikeDetailsViewDto[]> {
+  ): Promise<LikeDetailsReadModel[]> {
     const likes = await this.likeModel
       .find({
         targetId,
@@ -87,14 +82,19 @@ export class LikesQueryRepository implements ILikesQueryRepository {
       .lean()
       .exec();
 
-    return likes.map((like) => this.mapToLikeDetails(like));
+    return likes.map((like): LikeDetailsReadModel => ({
+      targetId: like.targetId,
+      authorId: like.authorId,
+      authorLogin: like.authorLogin,
+      createdAt: like.createdAt,
+    }));
   }
 
   async findNewestLikesForMultipleTargets(
     targetIds: string[],
     targetType: LikeTargetType,
-  ): Promise<Map<string, LikeDetailsViewDto[]>> {
-    const newestLikesByTarget = new Map<string, LikeDetailsViewDto[]>(
+  ): Promise<Map<string, LikeDetailsReadModel[]>> {
+    const newestLikesByTarget = new Map<string, LikeDetailsReadModel[]>(
       targetIds.map((targetId) => [targetId, []]),
     );
 
@@ -113,34 +113,22 @@ export class LikesQueryRepository implements ILikesQueryRepository {
         createdAt: -1,
         _id: -1,
       })
-      .select({
-        _id: 0,
-        targetId: 1,
-        authorId: 1,
-        authorLogin: 1,
-        createdAt: 1,
-      })
-      .lean<LikeDetailsReadModel[]>()
+      .lean()
       .exec();
 
     for (const like of likes) {
       const newestLikes = newestLikesByTarget.get(like.targetId);
 
-      if (!newestLikes || newestLikes.length >= 3) {
-        continue;
+      if (newestLikes && newestLikes.length < 3) {
+        newestLikes.push({
+          targetId: like.targetId,
+          authorId: like.authorId,
+          authorLogin: like.authorLogin,
+          createdAt: like.createdAt,
+        });
       }
-
-      newestLikes.push(this.mapToLikeDetails(like));
     }
 
     return newestLikesByTarget;
-  }
-
-  private mapToLikeDetails(like: LikeDetailsReadModel): LikeDetailsViewDto {
-    return {
-      addedAt: like.createdAt,
-      userId: like.authorId,
-      login: like.authorLogin,
-    };
   }
 }

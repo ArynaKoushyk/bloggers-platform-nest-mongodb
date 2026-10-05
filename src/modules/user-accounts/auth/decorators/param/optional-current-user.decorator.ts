@@ -1,8 +1,8 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { UserContextDto } from '../../application/dto/user-context.dto';
 
-export const OptionalCurrentUser = createParamDecorator(
-  (_data: unknown, context: ExecutionContext): UserContextDto | null => {
+export const OptionalCurrentUser = createParamDecorator<keyof UserContextDto>(
+  (prop, context: ExecutionContext): any => {
     const request = context
       .switchToHttp()
       .getRequest<{ user?: UserContextDto }>();
@@ -11,7 +11,10 @@ export const OptionalCurrentUser = createParamDecorator(
     if (!user) {
       return null;
     }
-
-    return user;
+    if (prop) {
+      return user[prop];
+    } else {
+      return user;
+    }
   },
 );

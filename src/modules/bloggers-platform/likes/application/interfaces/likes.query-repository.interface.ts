@@ -1,11 +1,6 @@
 import type { LikeTargetType } from '../../domain/enums/like-target-type.enum';
 import type { LikeStatus } from '../../domain/enums/like-status.enum';
-
-export type NewestLikeReadModel = {
-  addedAt: Date;
-  userId: string;
-  login: string;
-};
+import { LikeDetailsReadModel } from '../read-models/like.read-model';
 
 export interface ILikesQueryRepository {
   findStatusByAuthorAndTarget(
@@ -21,9 +16,9 @@ export interface ILikesQueryRepository {
   findNewestLikesForSingleTarget(
     targetId: string,
     targetType: LikeTargetType,
-  ): Promise<NewestLikeReadModel[]>;
+  ): Promise<LikeDetailsReadModel[]>;
   findNewestLikesForMultipleTargets(
     targetIds: string[],
     targetType: LikeTargetType,
-  ): Promise<Map<string, NewestLikeReadModel[]>>;
+  ): Promise<Map<string, LikeDetailsReadModel[]>>;
 }

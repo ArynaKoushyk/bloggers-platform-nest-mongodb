@@ -9,9 +9,13 @@ import {
   LIKES_QUERY_REPOSITORY,
   POSTS_QUERY_REPOSITORY,
 } from '../../../tokens/repository.tokens';
+import { LikeStatus } from '../../../likes/domain/enums/like-status.enum';
 
 export class GetPostByIdQuery extends Query<PostViewDto> {
-  constructor(public readonly postId: string) {
+  constructor(
+    public readonly postId: string,
+    public readonly userId: string | null,
+  ) {
     super();
   }
 }
@@ -25,14 +29,30 @@ export class GetPostByIdQueryHandler implements IQueryHandler<GetPostByIdQuery> 
     private readonly likesQueryRepository: ILikesQueryRepository,
   ) {}
 
-  async execute({ postId }: GetPostByIdQuery): Promise<PostViewDto> {
+  async execute({ postId, userId }: GetPostByIdQuery): Promise<PostViewDto> {
     const post = await this.postsQueryRepository.findByIdOrFail(postId);
     const newestLikes =
       await this.likesQueryRepository.findNewestLikesForSingleTarget(
         postId,
         LikeTargetType.Post,
       );
+    const userStatus = await this.getPostStatusForUser(postId, userId);
 
-    return PostViewMapper.toView(post, newestLikes);
+    return PostViewMapper.toView(post, userStatus, newestLikes);
+  }
+
+  private async getPostStatusForUser(
+    postId: string,
+    userId: string | null,
+  ): Promise<LikeStatus> {
+    if (userId === null) {
+      return LikeStatus.None;
+    } else {
+      return await this.likesQueryRepository.findStatusByAuthorAndTarget(
+        postId,
+        LikeTargetType.Post,
+        userId,
+      );
+    }
   }
 }

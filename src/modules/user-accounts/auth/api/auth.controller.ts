@@ -6,6 +6,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Res,
 } from '@nestjs/common';
 import { AuthService } from '../application/auth.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
@@ -28,6 +29,7 @@ import { ConfirmRegistrationCommand } from '../application/usecases/confirm-regi
 import { RequestPasswordRecoveryCommand } from '../application/usecases/request-password-recovery.usecase';
 import { ResetPasswordCommand } from '../application/usecases/reset-password.usecase';
 import { GetCurrentUserQuery } from '../application/queries/get-current-user.query-handler';
+import type { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -46,13 +48,25 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   // не использую passport local потому что хочу четко разделять оишбки валидации 400 и авторизации 401
-  async login(@Body() dto: LoginInputDto): Promise<LoginSuccessViewDto> {
+  async login(
+    @Body() dto: LoginInputDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<LoginSuccessViewDto> {
     const user = await this.authService.validateCredentials(
       dto.loginOrEmail,
       dto.password,
     );
 
-    return this.commandBus.execute(new LoginUserCommand(user.id));
+    const loginResult = await this.commandBus.execute(
+      new LoginUserCommand(user.id),
+    );
+    response.cookie('refreshToken', loginResult.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict', // Защита от CSRF-атак
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+    return { accessToken: loginResult.accessToken };
   }
 
   @Post('registration-email-resending')

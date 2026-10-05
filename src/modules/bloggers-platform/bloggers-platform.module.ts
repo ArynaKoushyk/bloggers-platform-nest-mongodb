@@ -35,6 +35,7 @@ import { GetPostCommentsQueryHandler } from './comments/application/queries/get-
 import { Like, LikeSchema } from './likes/domain/like.entity';
 import { LikesRepository } from './likes/infrastructure/repositories/likes.repository';
 import { LikesQueryRepository } from './likes/infrastructure/repositories/likes.query-repository';
+import { UpdateLikeStatusUseCase } from './likes/application/usecases/update-like-status.usecase';
 import {
   BLOGS_QUERY_REPOSITORY,
   BLOGS_REPOSITORY,
@@ -61,6 +62,9 @@ const useCases = [
   CreateCommentUseCase,
   UpdateCommentUseCase,
   DeleteCommentUseCase,
+
+  // Likes
+  UpdateLikeStatusUseCase,
 ];
 
 const queryHandlers = [

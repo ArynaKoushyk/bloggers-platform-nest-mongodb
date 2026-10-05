@@ -1,12 +1,14 @@
 import { PostViewDto } from '../../api/view-dto/post.view-dto';
 import { LikeStatus } from '../../../likes/domain/enums/like-status.enum';
 import { PostReadModel } from '../read-models/post.read-model';
-import { LikeDetailsViewDto } from '../../../likes/api/view-dto/like-details.view-dto';
+import { LikeDetailsViewMapper } from '../../../likes/application/mappers/like-details-view.mapper';
+import { LikeDetailsReadModel } from '../../../likes/application/read-models/like.read-model';
 
 export class PostViewMapper {
   static toView(
     post: PostReadModel,
-    newestLikes: LikeDetailsViewDto[] = [],
+    myStatus: LikeStatus = LikeStatus.None,
+    newestLikes: LikeDetailsReadModel[] | undefined = [],
   ): PostViewDto {
     const dto = new PostViewDto();
 
@@ -20,8 +22,10 @@ export class PostViewMapper {
     dto.extendedLikesInfo = {
       likesCount: post.likesCount,
       dislikesCount: post.dislikesCount,
-      myStatus: LikeStatus.None,
-      newestLikes,
+      myStatus,
+      newestLikes: newestLikes.map((like) =>
+        LikeDetailsViewMapper.toView(like),
+      ),
     };
 
     return dto;

@@ -11,9 +11,13 @@ import {
   LIKES_QUERY_REPOSITORY,
   POSTS_QUERY_REPOSITORY,
 } from '../../../tokens/repository.tokens';
+import { LikeStatus } from '../../../likes/domain/enums/like-status.enum';
 
 export class GetPostsQuery extends Query<PaginatedViewDto<PostViewDto[]>> {
-  constructor(public readonly queryParams: GetPostsQueryParams) {
+  constructor(
+    public readonly queryParams: GetPostsQueryParams,
+    public readonly userId: string | null,
+  ) {
     super();
   }
 }
@@ -29,17 +33,30 @@ export class GetPostsQueryHandler implements IQueryHandler<GetPostsQuery> {
 
   async execute({
     queryParams,
+    userId,
   }: GetPostsQuery): Promise<PaginatedViewDto<PostViewDto[]>> {
     const postsPage = await this.postsQueryRepository.findAll(queryParams);
+
     const postIds = postsPage.items.map((post) => post.id);
+
     const newestLikesByPost =
       await this.likesQueryRepository.findNewestLikesForMultipleTargets(
         postIds,
         LikeTargetType.Post,
       );
-    const items = postsPage.items.map((post) =>
-      PostViewMapper.toView(post, newestLikesByPost.get(post.id) ?? []),
-    );
+
+    const statusesByPost = await this.getStatusesByPost(postIds, userId);
+
+    const items = postsPage.items.map((post) => {
+      const status = statusesByPost.get(post.id);
+      const newestLikes = newestLikesByPost.get(post.id);
+
+      return PostViewMapper.toView(
+        post,
+        status ?? LikeStatus.None,
+        newestLikes ?? [],
+      );
+    });
 
     return PaginatedViewDto.mapToView({
       items,
@@ -47,5 +64,20 @@ export class GetPostsQueryHandler implements IQueryHandler<GetPostsQuery> {
       size: postsPage.pageSize,
       totalCount: postsPage.totalCount,
     });
+  }
+
+  private async getStatusesByPost(
+    postIds: string[],
+    userId: string | null,
+  ): Promise<Map<string, LikeStatus>> {
+    if (userId === null) {
+      return new Map<string, LikeStatus>();
+    } else {
+      return await this.likesQueryRepository.findStatusesByAuthorAndTargets(
+        postIds,
+        LikeTargetType.Post,
+        userId,
+      );
+    }
   }
 }

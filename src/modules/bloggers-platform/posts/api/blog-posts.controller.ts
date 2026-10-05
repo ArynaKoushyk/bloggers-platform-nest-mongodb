@@ -19,6 +19,8 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetBlogPostsQuery } from '../application/queries/get-blog-posts.query-handler';
 import { CreatePostCommand } from '../application/usecases/create-post.usecase';
 import { GetPostByIdQuery } from '../application/queries/get-post-by-id.query-handler';
+import { JwtOptionalAuthGuard } from '../../../user-accounts/auth/guards/jwt/jwt-optional-auth.guard';
+import { OptionalCurrentUser } from '../../../user-accounts/auth/decorators/param/optional-current-user.decorator';
 
 @Controller('blogs/:blogId/posts')
 export class BlogPostsController {
@@ -27,13 +29,15 @@ export class BlogPostsController {
     private readonly commandBus: CommandBus,
   ) {}
 
+  @UseGuards(JwtOptionalAuthGuard)
   @Get()
   async getBlogPosts(
     @Param('blogId', ObjectIdValidationPipe) blogId: string,
     @Query() queryParams: GetPostsQueryParams,
+    @OptionalCurrentUser('id') userId: string | null,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
     return await this.queryBus.execute(
-      new GetBlogPostsQuery(blogId, queryParams),
+      new GetBlogPostsQuery(blogId, queryParams, userId),
     );
   }
 
@@ -42,6 +46,7 @@ export class BlogPostsController {
   async createBlogPost(
     @Param('blogId', ObjectIdValidationPipe) blogId: string,
     @Body() dto: CreatePostForBlogInputDto,
+    @OptionalCurrentUser('id') userId: string | null,
   ): Promise<PostViewDto> {
     const data: CreatePostDto = {
       title: dto.title,
@@ -51,6 +56,6 @@ export class BlogPostsController {
     };
 
     const postId = await this.commandBus.execute(new CreatePostCommand(data));
-    return await this.queryBus.execute(new GetPostByIdQuery(postId));
+    return await this.queryBus.execute(new GetPostByIdQuery(postId, userId));
   }
 }

@@ -21,7 +21,7 @@ export class GetPostCommentsQuery extends Query<
   constructor(
     public readonly postId: string,
     public readonly queryParams: GetCommentsQueryParams,
-    public readonly userId?: string,
+    public readonly userId: string | null,
   ) {
     super();
   }
@@ -50,25 +50,17 @@ export class GetPostCommentsQueryHandler implements IQueryHandler<GetPostComment
       queryParams,
     );
 
-    let statusesByComment = new Map<string, LikeStatus>();
+    const commentIds = commentsPage.items.map((comment) => comment.id);
 
-    if (userId) {
-      const commentIds = commentsPage.items.map((comment) => comment.id);
-
-      statusesByComment =
-        await this.likesQueryRepository.findStatusesByAuthorAndTargets(
-          commentIds,
-          LikeTargetType.Comment,
-          userId,
-        );
-    }
-
-    const items = commentsPage.items.map((comment) =>
-      CommentViewMapper.toView(
-        comment,
-        statusesByComment.get(comment.id) ?? LikeStatus.None,
-      ),
+    const statusesByComment = await this.getStatusesByComment(
+      commentIds,
+      userId,
     );
+
+    const items = commentsPage.items.map((comment) => {
+      const status = statusesByComment.get(comment.id);
+      return CommentViewMapper.toView(comment, status ?? LikeStatus.None);
+    });
 
     return PaginatedViewDto.mapToView({
       items,
@@ -76,5 +68,20 @@ export class GetPostCommentsQueryHandler implements IQueryHandler<GetPostComment
       size: commentsPage.pageSize,
       totalCount: commentsPage.totalCount,
     });
+  }
+
+  private async getStatusesByComment(
+    commentIds: string[],
+    userId: string | null,
+  ): Promise<Map<string, LikeStatus>> {
+    if (userId === null) {
+      return new Map<string, LikeStatus>();
+    } else {
+      return await this.likesQueryRepository.findStatusesByAuthorAndTargets(
+        commentIds,
+        LikeTargetType.Comment,
+        userId,
+      );
+    }
   }
 }
