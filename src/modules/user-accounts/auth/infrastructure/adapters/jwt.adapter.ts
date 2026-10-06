@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import type { SignOptions } from 'jsonwebtoken';
 import type { AccessTokenPayload } from '../../application/types/access-token-payload.type';
-import type { RefreshTokenPayload } from '../../application/types/refresh-token-payload.type';
 
 @Injectable()
 export class JwtAdapter {
@@ -25,8 +24,12 @@ export class JwtAdapter {
     });
   }
 
-  createRefreshToken(userId: string, deviceId: string): Promise<string> {
-    const payload: RefreshTokenPayload = {
+  createRefreshToken(
+    userId: string,
+    deviceId: string,
+    refreshTokenId: string,
+  ): Promise<string> {
+    const payload = {
       sub: userId,
       deviceId,
     };
@@ -36,6 +39,7 @@ export class JwtAdapter {
       expiresIn: this.configService.getOrThrow<SignOptions['expiresIn']>(
         'JWT_REFRESH_TOKEN_EXPIRES_IN',
       ),
+      jwtid: refreshTokenId,
     });
   }
 }

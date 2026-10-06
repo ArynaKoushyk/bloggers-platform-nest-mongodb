@@ -12,7 +12,7 @@ import type { ICommentsRepository } from '../../application/interfaces/comments.
 @Injectable()
 export class CommentsRepository implements ICommentsRepository {
   constructor(
-    @InjectModel(Comment.name) private commentModel: CommentModelType,
+    @InjectModel(Comment.name) private readonly commentModel: CommentModelType,
   ) {}
 
   findById(id: string): Promise<CommentDocument | null> {

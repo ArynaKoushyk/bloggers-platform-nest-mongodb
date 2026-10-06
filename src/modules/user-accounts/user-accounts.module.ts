@@ -1,4 +1,4 @@
-import { Module, type Provider } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { UsersController } from './users/api/users.controller';
 import { UsersQueryRepository } from './users/infrastructure/repositories/users.query-repository';
 import { UsersRepository } from './users/infrastructure/repositories/users.repository';
@@ -28,9 +28,18 @@ import { RequestPasswordRecoveryUseCase } from './auth/application/usecases/requ
 import { ResetPasswordUseCase } from './auth/application/usecases/reset-password.usecase';
 import {
   AUTH_QUERY_REPOSITORY,
+  AUTH_SESSIONS_REPOSITORY,
+  SECURITY_DEVICES_QUERY_REPOSITORY,
   USERS_QUERY_REPOSITORY,
   USERS_REPOSITORY,
 } from './tokens/repository.tokens';
+import { AuthSessionsRepository } from './security-devices/infrastructure/repositories/auth-sessions.repository';
+import { SecurityDevicesQueryRepository } from './security-devices/infrastructure/repositories/security-devices.query-repository';
+import { AuthSessionAccessPolicy } from './security-devices/application/policies/auth-session-access.policy';
+import {
+  AuthSession,
+  AuthSessionSchema,
+} from './security-devices/domain/auth-session.entity';
 
 const useCases = [
   CreateUserUseCase,
@@ -62,9 +71,19 @@ const repositoryProviders = [
     provide: AUTH_QUERY_REPOSITORY,
     useClass: AuthQueryRepository,
   },
+
+  {
+    provide: AUTH_SESSIONS_REPOSITORY,
+    useClass: AuthSessionsRepository,
+  },
+  {
+    provide: SECURITY_DEVICES_QUERY_REPOSITORY,
+    useClass: SecurityDevicesQueryRepository,
+  },
 ];
 
 const factories = [UsersFactory];
+const policies = [AuthSessionAccessPolicy];
 
 @Module({
   imports: [
@@ -72,6 +91,10 @@ const factories = [UsersFactory];
       {
         name: User.name,
         schema: UserSchema,
+      },
+      {
+        name: AuthSession.name,
+        schema: AuthSessionSchema,
       },
     ]),
     PassportModule,
@@ -84,6 +107,7 @@ const factories = [UsersFactory];
     ...queryHandlers,
     ...repositoryProviders,
     ...factories,
+    ...policies,
     AuthService,
     PasswordHashAdapter,
     LocalStrategy,
