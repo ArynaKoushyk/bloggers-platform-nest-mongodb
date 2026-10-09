@@ -9,7 +9,7 @@ export class AuthSessionAccessPolicy {
     if (session.userId !== userId) {
       throw new DomainException({
         code: DomainExceptionCode.Forbidden,
-        message: 'You are not the owner of this comment',
+        message: 'You are not the owner of this session',
       });
     }
   }

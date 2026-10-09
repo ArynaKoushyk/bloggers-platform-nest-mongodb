@@ -40,6 +40,12 @@ import {
   AuthSession,
   AuthSessionSchema,
 } from './security-devices/domain/auth-session.entity';
+import { RefreshTokenStrategy } from './auth/infrastructure/strategies/refresh-token.strategy';
+import { RefreshTokensUseCase } from './auth/application/usecases/refresh-tokens.usecase';
+import { TerminateDeviceSessionCommand } from './security-devices/application/usecases/terminate-device-session.usecase';
+import { TerminateOtherDeviceSessionsCommand } from './security-devices/application/usecases/terminate-other-device-sessions.usecase';
+import { GetSecurityDevicesQueryHandler } from './security-devices/application/queries/get-security-devices.query-handler';
+import { LogoutUserUseCase } from './auth/application/usecases/logout-user.usecase';
 
 const useCases = [
   CreateUserUseCase,
@@ -50,12 +56,17 @@ const useCases = [
   ResendConfirmationEmailUseCase,
   RequestPasswordRecoveryUseCase,
   ResetPasswordUseCase,
+  RefreshTokensUseCase,
+  LogoutUserUseCase,
+  TerminateDeviceSessionCommand,
+  TerminateOtherDeviceSessionsCommand,
 ];
 
 const queryHandlers = [
   GetUserByIdQueryHandler,
   GetUsersQueryHandler,
   GetCurrentUserQueryHandler,
+  GetSecurityDevicesQueryHandler,
 ];
 
 const repositoryProviders = [
@@ -112,6 +123,7 @@ const policies = [AuthSessionAccessPolicy];
     PasswordHashAdapter,
     LocalStrategy,
     JwtStrategy,
+    RefreshTokenStrategy,
     JwtAdapter,
   ],
   exports: [JwtStrategy],

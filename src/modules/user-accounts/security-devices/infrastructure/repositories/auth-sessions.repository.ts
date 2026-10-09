@@ -24,6 +24,20 @@ export class AuthSessionsRepository implements IAuthSessionsRepository {
   async deleteByDeviceId(deviceId: string): Promise<void> {
     await this.authSessionModel.deleteOne({ deviceId }).exec();
   }
+
+  async deleteCurrentSession(
+    userId: string,
+    deviceId: string,
+    refreshTokenId: string,
+  ): Promise<void> {
+    await this.authSessionModel
+      .deleteOne({
+        userId,
+        deviceId,
+        refreshTokenId,
+      })
+      .exec();
+  }
   async deleteAllOtherSessionsForUser(
     userId: string,
     currentDeviceId: string,

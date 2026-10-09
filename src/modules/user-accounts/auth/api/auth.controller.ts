@@ -7,8 +7,9 @@ import {
   HttpCode,
   HttpStatus,
   Res,
+  Ip,
+  Headers,
 } from '@nestjs/common';
-import { AuthService } from '../application/auth.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { CurrentUser } from '../decorators/param/current-user.decorator';
 import { UserContextDto } from '../application/dto/user-context.dto';
@@ -30,13 +31,19 @@ import { RequestPasswordRecoveryCommand } from '../application/usecases/request-
 import { ResetPasswordCommand } from '../application/usecases/reset-password.usecase';
 import { GetCurrentUserQuery } from '../application/queries/get-current-user.query-handler';
 import type { Response } from 'express';
+import { ConfigService } from '@nestjs/config';
+import { RefreshTokenAuthGuard } from '../guards/jwt/refresh-token-auth.guard';
+import { CurrentRefreshTokenContext } from '../decorators/param/current-refresh-token-context.decorator';
+import { type RefreshTokenContext } from '../application/types/refresh-token-context.type';
+import { RefreshTokensCommand } from '../application/usecases/refresh-tokens.usecase';
+import { LogoutUserCommand } from '../application/usecases/logout-user.usecase';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
-    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
   ) {}
 
   @Post('registration')
@@ -50,23 +57,73 @@ export class AuthController {
   // не использую passport local потому что хочу четко разделять оишбки валидации 400 и авторизации 401
   async login(
     @Body() dto: LoginInputDto,
+    @Ip() ip: string,
+    @Headers('user-agent') userAgent: string,
     @Res({ passthrough: true }) response: Response,
   ): Promise<LoginSuccessViewDto> {
-    const user = await this.authService.validateCredentials(
-      dto.loginOrEmail,
-      dto.password,
+    const loginResult = await this.commandBus.execute(
+      new LoginUserCommand(dto.loginOrEmail, dto.password, ip, userAgent),
     );
 
-    const loginResult = await this.commandBus.execute(
-      new LoginUserCommand(user.id),
+    const refreshTokenCookieMaxAge = Number(
+      this.configService.getOrThrow<string>('REFRESH_TOKEN_COOKIE_MAX_AGE_MS'),
     );
     response.cookie('refreshToken', loginResult.refreshToken, {
       httpOnly: true,
       secure: true,
-      sameSite: 'strict', // Защита от CSRF-атак
-      maxAge: 30 * 24 * 60 * 60 * 1000,
+      sameSite: 'strict',
+      maxAge: refreshTokenCookieMaxAge,
     });
     return { accessToken: loginResult.accessToken };
+  }
+
+  @UseGuards(RefreshTokenAuthGuard)
+  @Post('refresh-token')
+  @HttpCode(HttpStatus.OK)
+  async rotateTokens(
+    @CurrentRefreshTokenContext() user: RefreshTokenContext,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<{ accessToken: string }> {
+    const result = await this.commandBus.execute(
+      new RefreshTokensCommand(user),
+    );
+
+    const refreshTokenCookieMaxAge = Number(
+      this.configService.getOrThrow<string>('REFRESH_TOKEN_COOKIE_MAX_AGE_MS'),
+    );
+    response.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      path: '/',
+      maxAge: refreshTokenCookieMaxAge,
+    });
+    return { accessToken: result.accessToken };
+  }
+
+  @UseGuards(RefreshTokenAuthGuard)
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async logout(
+    @CurrentRefreshTokenContext()
+    context: RefreshTokenContext,
+    @Res({ passthrough: true })
+    response: Response,
+  ): Promise<void> {
+    await this.commandBus.execute(
+      new LogoutUserCommand(
+        context.userId,
+        context.deviceId,
+        context.refreshTokenId,
+      ),
+    );
+
+    response.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      path: '/',
+    });
   }
 
   @Post('registration-email-resending')

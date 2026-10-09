@@ -8,4 +8,9 @@ export interface IAuthSessionsRepository {
     userId: string,
     currentDeviceId: string,
   ): Promise<void>;
+  deleteCurrentSession(
+    userId: string,
+    deviceId: string,
+    refreshTokenId: string,
+  ): Promise<void>;
 }

@@ -4,41 +4,83 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-code.enum';
 import { DomainException } from '../../../../../core/exceptions/domain.exception';
-import { USERS_REPOSITORY } from '../../../tokens/repository.tokens';
-import type { IUsersRepository } from '../../../users/application/interfaces/users.repository.interface';
-import { UserContextDto } from '../../application/dto/user-context.dto';
-import { AccessTokenPayload } from '../../application/types/access-token-payload.type';
+import { AUTH_SESSIONS_REPOSITORY } from '../../../tokens/repository.tokens';
+import { RefreshTokenPayload } from '../../application/types/refresh-token-payload.type';
+import { RefreshTokenContext } from '../../application/types/refresh-token-context.type';
+import { Request } from 'express';
+import { type IAuthSessionsRepository } from '../../../security-devices/application/interfaces/auth-sessions.repository.interface';
 
 @Injectable()
-export class RefreshTokenStrategy extends PassportStrategy(Strategy, 'jwt') {
+export class RefreshTokenStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-refresh',
+) {
   constructor(
     configService: ConfigService,
-    @Inject(USERS_REPOSITORY)
-    private readonly usersRepository: IUsersRepository,
+    @Inject(AUTH_SESSIONS_REPOSITORY)
+    private readonly authSessionsRepository: IAuthSessionsRepository,
   ) {
-    const accessSecretKey = configService.getOrThrow<string>(
-      'ACCESS_TOKEN_SECRET',
+    const refreshSecretKey = configService.getOrThrow<string>(
+      'REFRESH_TOKEN_SECRET',
     );
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (req: Request): string | null => {
+          const cookies = req.cookies as {
+            refreshToken?: unknown;
+          };
+
+          if (typeof cookies.refreshToken !== 'string') {
+            return null;
+          }
+
+          return cookies.refreshToken;
+        },
+      ]),
       ignoreExpiration: false,
-      secretOrKey: accessSecretKey,
+      secretOrKey: refreshSecretKey,
     });
   }
   //функция принимает payload из jwt токена и возвращает то, что впоследствии будет записано в req.user
-  async validate(payload: AccessTokenPayload): Promise<UserContextDto> {
-    const user = await this.usersRepository.findById(payload.sub);
-
-    if (!user) {
+  async validate(payload: RefreshTokenPayload): Promise<RefreshTokenContext> {
+    const session = await this.authSessionsRepository.findByDeviceId(
+      payload.deviceId,
+    );
+    if (!session) {
       throw new DomainException({
         code: DomainExceptionCode.Unauthorized,
-        message: 'Unauthorized',
+        message: 'Refresh token is invalid',
+      });
+    }
+
+    if (session.refreshTokenId !== payload.jti) {
+      throw new DomainException({
+        code: DomainExceptionCode.Unauthorized,
+        message: 'Refresh token is invalid',
+      });
+    }
+    const currentDate = new Date();
+
+    if (session.expirationDate <= currentDate) {
+      throw new DomainException({
+        code: DomainExceptionCode.Unauthorized,
+        message: 'Refresh token is invalid',
+      });
+    }
+
+    if (session.userId !== payload.sub) {
+      throw new DomainException({
+        code: DomainExceptionCode.Unauthorized,
+        message: 'Refresh token is invalid',
       });
     }
 
     return {
-      id: user.id,
-      login: user.login,
+      userId: payload.sub,
+      deviceId: payload.deviceId,
+      refreshTokenId: payload.jti,
+      issuedAt: new Date(payload.iat * 1000),
+      expirationDate: new Date(payload.exp * 1000),
     };
   }
 }
