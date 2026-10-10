@@ -37,6 +37,7 @@ import { CurrentRefreshTokenContext } from '../decorators/param/current-refresh-
 import { type RefreshTokenContext } from '../application/types/refresh-token-context.type';
 import { RefreshTokensCommand } from '../application/usecases/refresh-tokens.usecase';
 import { LogoutUserCommand } from '../application/usecases/logout-user.usecase';
+import { AuthRateLimit } from './decorators/auth-rate-limit.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -46,12 +47,14 @@ export class AuthController {
     private readonly configService: ConfigService,
   ) {}
 
+  @AuthRateLimit()
   @Post('registration')
   @HttpCode(HttpStatus.NO_CONTENT)
   registerUser(@Body() dto: RegisterUserInputDto): Promise<void> {
     return this.commandBus.execute(new RegisterUserCommand(dto));
   }
 
+  @AuthRateLimit()
   @Post('login')
   @HttpCode(HttpStatus.OK)
   // не использую passport local потому что хочу четко разделять оишбки валидации 400 и авторизации 401
@@ -126,6 +129,7 @@ export class AuthController {
     });
   }
 
+  @AuthRateLimit()
   @Post('registration-email-resending')
   @HttpCode(HttpStatus.NO_CONTENT)
   resendRegistrationConfirmationEmail(
@@ -134,12 +138,14 @@ export class AuthController {
     return this.commandBus.execute(new ResendConfirmationEmailCommand(dto));
   }
 
+  @AuthRateLimit()
   @Post('registration-confirmation')
   @HttpCode(HttpStatus.NO_CONTENT)
   confirmRegistration(@Body() dto: ConfirmRegistrationInputDto): Promise<void> {
     return this.commandBus.execute(new ConfirmRegistrationCommand(dto));
   }
 
+  @AuthRateLimit()
   @Post('password-recovery')
   @HttpCode(HttpStatus.NO_CONTENT)
   startPasswordRecovery(
@@ -148,6 +154,7 @@ export class AuthController {
     return this.commandBus.execute(new RequestPasswordRecoveryCommand(dto));
   }
 
+  @AuthRateLimit()
   @Post('new-password')
   @HttpCode(HttpStatus.NO_CONTENT)
   resetPassword(@Body() dto: ResetPasswordInputDto): Promise<void> {
