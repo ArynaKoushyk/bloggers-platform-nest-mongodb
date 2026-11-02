@@ -4,7 +4,7 @@ import type { IBlogsRepository } from '../interfaces/blogs.repository.interface'
 import { BLOGS_REPOSITORY } from '../../../tokens/repository.tokens';
 
 export class DeleteBlogCommand extends Command<void> {
-  constructor(public readonly id: string) {
+  constructor(public readonly blogId: string) {
     super();
   }
 }
@@ -17,7 +17,7 @@ export class DeleteBlogUseCase implements ICommandHandler<DeleteBlogCommand> {
   ) {}
 
   async execute(command: DeleteBlogCommand): Promise<void> {
-    const blog = await this.blogsRepository.findByIdOrFail(command.id);
+    const blog = await this.blogsRepository.findByIdOrFail(command.blogId);
     blog.markAsDeleted();
     await this.blogsRepository.save(blog);
   }

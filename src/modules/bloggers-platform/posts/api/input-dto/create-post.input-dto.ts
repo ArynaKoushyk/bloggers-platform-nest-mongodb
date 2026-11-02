@@ -1,6 +1,6 @@
 import { IsMongoId } from 'class-validator';
 import { CreatePostDto } from '../../application/dto/create-post.dto';
-import { IsStringWithTrim } from '../../../../../core/decorators/validation/is-string-with-trim.decorator';
+import { IsStringWithTrim } from '../../../../../core/api/decorators/validation/is-string-with-trim.decorator';
 import {
   postContentConstraints,
   postShortDescriptionConstraints,

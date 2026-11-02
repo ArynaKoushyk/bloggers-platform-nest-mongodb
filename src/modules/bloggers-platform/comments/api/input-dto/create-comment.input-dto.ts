@@ -1,4 +1,4 @@
-import { IsStringWithTrim } from '../../../../../core/decorators/validation/is-string-with-trim.decorator';
+import { IsStringWithTrim } from '../../../../../core/api/decorators/validation/is-string-with-trim.decorator';
 import { CreateCommentDto } from '../../application/dto/create-comment.dto';
 import { commentContentConstraints } from './constants/comment-validation.constants';
 

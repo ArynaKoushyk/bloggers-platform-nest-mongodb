@@ -1,6 +1,6 @@
 import { IsString, Length, Matches } from 'class-validator';
-import { Trim } from '../../../../../core/decorators/transform/trim.decorator';
-import { IsStringWithTrim } from '../../../../../core/decorators/validation/is-string-with-trim.decorator';
+import { Trim } from '../../../../../core/api/decorators/transform/trim.decorator';
+import { IsStringWithTrim } from '../../../../../core/api/decorators/validation/is-string-with-trim.decorator';
 import type { RegisterUserDto } from '../../application/dto/register-user.dto';
 import {
   authEmailConstraints,
@@ -22,9 +22,6 @@ export class RegisterUserInputDto implements RegisterUserDto {
   email: string;
 
   @IsString()
-  @Length(
-    authPasswordConstraints.minLength,
-    authPasswordConstraints.maxLength,
-  )
+  @Length(authPasswordConstraints.minLength, authPasswordConstraints.maxLength)
   password: string;
 }

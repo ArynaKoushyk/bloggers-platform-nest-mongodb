@@ -1,7 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
-import { AllExceptionsFilter } from './exceptions/filters/all-exceptions.filter';
-import { DomainExceptionFilter } from './exceptions/filters/domain-exception.filter';
+import { AllExceptionsFilter } from './api/filters/all-exceptions.filter';
+import { DomainExceptionFilter } from './api/filters/domain-exception.filter';
 import { ThrottlerModule } from '@nestjs/throttler';
 import {
   AUTH_RATE_LIMIT_MAX_REQUESTS,

@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { Inject } from '@nestjs/common';
-import { StartPasswordRecoveryDto } from '../dto/start-password-recovery.dto';
+import { RequestPasswordRecoveryDto } from '../dto/request-password-recovery.dto';
 import { randomUUID } from 'crypto';
 import {
   Command,
@@ -13,7 +13,7 @@ import type { IUsersRepository } from '../../../users/application/interfaces/use
 import { USERS_REPOSITORY } from '../../../tokens/repository.tokens';
 
 export class RequestPasswordRecoveryCommand extends Command<void> {
-  constructor(public readonly dto: StartPasswordRecoveryDto) {
+  constructor(public readonly dto: RequestPasswordRecoveryDto) {
     super();
   }
 }

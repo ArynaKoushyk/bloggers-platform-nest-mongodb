@@ -10,12 +10,12 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { PaginatedViewDto } from '../../../../core/dto/base-paginated.view-dto';
+import { BasePaginatedViewDto } from '../../../../core/api/dto/base-paginated.view-dto';
 import { UserViewDto } from './view-dto/user.view-dto';
 import { GetUsersQueryParams } from './input-dto/get-users-query-params.input-dto';
 import { CreateUserInputDto } from './input-dto/create-user.input-dto';
 import { BasicAuthGuard } from '../../auth/guards/basic/basic-auth.guard';
-import { ObjectIdValidationPipe } from '../../../../core/pipes/object-id-validation.pipe';
+import { ObjectIdValidationPipe } from '../../../../core/api/pipes/object-id-validation.pipe';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { DeleteUserCommand } from '../application/usecases/delete-user.usecase';
 import { GetUsersQuery } from '../application/queries/get-users.query-handler';
@@ -33,7 +33,7 @@ export class UsersController {
   @Get()
   async getUsers(
     @Query() query: GetUsersQueryParams,
-  ): Promise<PaginatedViewDto<UserViewDto[]>> {
+  ): Promise<BasePaginatedViewDto<UserViewDto>> {
     return await this.queryBus.execute(new GetUsersQuery(query));
   }
 

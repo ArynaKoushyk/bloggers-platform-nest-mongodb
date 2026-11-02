@@ -64,7 +64,7 @@ export class PostsQueryRepository implements IPostsQueryRepository {
     if (!post) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
-        message: 'Post not found ',
+        errorsMessages: [{ field: null, message: 'Post not found ' }],
       });
     }
     const postReadModel: PostReadModel = {

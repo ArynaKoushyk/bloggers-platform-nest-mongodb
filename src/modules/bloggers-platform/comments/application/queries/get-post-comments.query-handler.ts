@@ -1,6 +1,7 @@
 import { IQueryHandler, Query, QueryHandler } from '@nestjs/cqrs';
 import { Inject } from '@nestjs/common';
-import { PaginatedViewDto } from '../../../../../core/dto/base-paginated.view-dto';
+import type { BasePaginatedViewDto } from '../../../../../core/api/dto/base-paginated.view-dto';
+import { BasePaginatedViewMapper } from '../../../../../core/api/mappers/base-paginated-view.mapper';
 import { CommentViewDto } from '../../api/view-dto/comment.view-dto';
 import { GetCommentsQueryParams } from '../../api/input-dto/get-comments-query-params.input-dto';
 import { CommentViewMapper } from '../mappers/comment-view.mapper';
@@ -16,7 +17,7 @@ import {
 } from '../../../tokens/repository.tokens';
 
 export class GetPostCommentsQuery extends Query<
-  PaginatedViewDto<CommentViewDto[]>
+  BasePaginatedViewDto<CommentViewDto>
 > {
   constructor(
     public readonly postId: string,
@@ -42,7 +43,7 @@ export class GetPostCommentsQueryHandler implements IQueryHandler<GetPostComment
     postId,
     userId,
     queryParams,
-  }: GetPostCommentsQuery): Promise<PaginatedViewDto<CommentViewDto[]>> {
+  }: GetPostCommentsQuery): Promise<BasePaginatedViewDto<CommentViewDto>> {
     await this.postsQueryRepository.findByIdOrFail(postId);
 
     const commentsPage = await this.commentsQueryRepository.findAllByPostId(
@@ -62,10 +63,10 @@ export class GetPostCommentsQueryHandler implements IQueryHandler<GetPostComment
       return CommentViewMapper.toView(comment, status ?? LikeStatus.None);
     });
 
-    return PaginatedViewDto.mapToView({
+    return BasePaginatedViewMapper.mapToView({
       items,
       page: commentsPage.page,
-      size: commentsPage.pageSize,
+      pageSize: commentsPage.pageSize,
       totalCount: commentsPage.totalCount,
     });
   }

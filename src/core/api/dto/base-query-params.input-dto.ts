@@ -1,13 +1,10 @@
 import { Type } from 'class-transformer';
 import { IsEnum, IsInt, Min } from 'class-validator';
+import { SortDirection } from '../../pagination/sort-direction.enum';
 
-export enum SortDirection {
-  Asc = 'asc',
-  Desc = 'desc',
-}
 //базовый класс для query параметров с пагинацией
 //значения по-умолчанию применятся автоматически при настройке глобального ValidationPipe в main.ts
-export class BaseQueryParams {
+export class BaseQueryParamsInputDto {
   //для трансформации в number
   @Type(() => Number)
   @IsInt()

@@ -26,12 +26,8 @@ export class ConfirmRegistrationUseCase implements ICommandHandler<ConfirmRegist
     if (!user) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
-        message: 'Confirmation code is incorrect',
-        extensions: [
-          {
-            message: 'Confirmation code is incorrect',
-            key: 'code',
-          },
+        errorsMessages: [
+          { field: 'code', message: 'Confirmation code is incorrect' },
         ],
       });
     }
@@ -43,12 +39,8 @@ export class ConfirmRegistrationUseCase implements ICommandHandler<ConfirmRegist
     if (result === ConfirmEmailError.AlreadyConfirmed) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
-        message: 'Email is already confirmed',
-        extensions: [
-          {
-            message: 'Email is already confirmed',
-            key: 'code',
-          },
+        errorsMessages: [
+          { field: 'code', message: 'Email is already confirmed' },
         ],
       });
     }
@@ -56,12 +48,8 @@ export class ConfirmRegistrationUseCase implements ICommandHandler<ConfirmRegist
     if (result === ConfirmEmailError.InvalidCode) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
-        message: 'Confirmation code is incorrect',
-        extensions: [
-          {
-            message: 'Confirmation code is incorrect',
-            key: 'code',
-          },
+        errorsMessages: [
+          { field: 'code', message: 'Confirmation code is incorrect' },
         ],
       });
     }
@@ -69,12 +57,8 @@ export class ConfirmRegistrationUseCase implements ICommandHandler<ConfirmRegist
     if (result === ConfirmEmailError.ExpiredCode) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
-        message: 'Confirmation code is expired',
-        extensions: [
-          {
-            message: 'Confirmation code is expired',
-            key: 'code',
-          },
+        errorsMessages: [
+          { field: 'code', message: 'Confirmation code is expired' },
         ],
       });
     }

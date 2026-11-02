@@ -29,7 +29,7 @@ export class PostsRepository implements IPostsRepository {
     if (!post) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
-        message: 'Post is not found',
+        errorsMessages: [{ field: null, message: 'Post is not found' }],
       });
     }
     return post;

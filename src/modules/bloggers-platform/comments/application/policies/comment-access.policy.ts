@@ -9,7 +9,9 @@ export class CommentAccessPolicy {
     if (comment.commentatorInfo.userId !== userId) {
       throw new DomainException({
         code: DomainExceptionCode.Forbidden,
-        message: 'You are not the owner of this comment',
+        errorsMessages: [
+          { field: null, message: 'You are not the owner of this comment' },
+        ],
       });
     }
   }

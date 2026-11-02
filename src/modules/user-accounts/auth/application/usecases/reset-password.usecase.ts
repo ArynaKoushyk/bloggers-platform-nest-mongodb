@@ -28,11 +28,10 @@ export class ResetPasswordUseCase implements ICommandHandler<ResetPasswordComman
     if (!user) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
-        message: 'Recovery code is invalid or expired',
-        extensions: [
+        errorsMessages: [
           {
+            field: 'recoveryCode',
             message: 'Recovery code is invalid or expired',
-            key: 'recoveryCode',
           },
         ],
       });
@@ -51,12 +50,8 @@ export class ResetPasswordUseCase implements ICommandHandler<ResetPasswordComman
     if (result === ResetPasswordError.ExpiredRecoveryCode) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
-        message: 'Recovery code is expired',
-        extensions: [
-          {
-            message: 'Recovery code is expired',
-            key: 'recoveryCode',
-          },
+        errorsMessages: [
+          { field: 'recoveryCode', message: 'Recovery code is expired' },
         ],
       });
     }
@@ -64,12 +59,8 @@ export class ResetPasswordUseCase implements ICommandHandler<ResetPasswordComman
     if (result === ResetPasswordError.InvalidRecoveryCode) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
-        message: 'Recovery code is invalid',
-        extensions: [
-          {
-            message: 'Recovery code is invalid',
-            key: 'recoveryCode',
-          },
+        errorsMessages: [
+          { field: 'recoveryCode', message: 'Recovery code is invalid' },
         ],
       });
     }

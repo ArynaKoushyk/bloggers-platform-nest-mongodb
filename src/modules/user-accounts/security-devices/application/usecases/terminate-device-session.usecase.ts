@@ -31,7 +31,7 @@ export class TerminateDeviceSessionUseCase implements ICommandHandler<TerminateD
     if (!session) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
-        message: 'Device session not found',
+        errorsMessages: [{ field: null, message: 'Device session not found' }],
       });
     }
 

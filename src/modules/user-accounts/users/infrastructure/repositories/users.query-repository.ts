@@ -87,7 +87,7 @@ export class UsersQueryRepository implements IUsersQueryRepository {
     if (!user) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
-        message: 'User not found',
+        errorsMessages: [{ field: null, message: 'User not found' }],
       });
     }
     return {

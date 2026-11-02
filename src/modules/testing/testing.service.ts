@@ -14,7 +14,9 @@ export class TestingService {
     if (!database) {
       throw new DomainException({
         code: DomainExceptionCode.InternalServerError,
-        message: 'Database connection is not initialized',
+        errorsMessages: [
+          { field: null, message: 'Database connection is not initialized' },
+        ],
       });
     }
 

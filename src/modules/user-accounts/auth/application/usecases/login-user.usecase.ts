@@ -46,10 +46,10 @@ export class LoginUserUseCase implements ICommandHandler<LoginUserCommand> {
       password,
     );
 
-    const accessToken = await this.jwtAdapter.createAccessToken(user.id);
+    const accessToken = await this.jwtAdapter.createAccessToken(user.userId);
     const deviceId = randomUUID();
     const refreshToken = await this.jwtAdapter.createRefreshToken(
-      user.id,
+      user.userId,
       deviceId,
     );
 
@@ -62,7 +62,7 @@ export class LoginUserUseCase implements ICommandHandler<LoginUserCommand> {
     const expirationDate = new Date(exp * 1000);
 
     const sessionData: CreateAuthSessionDomainDto = {
-      userId: user.id,
+      userId: user.userId,
       deviceId,
       ip,
       title,

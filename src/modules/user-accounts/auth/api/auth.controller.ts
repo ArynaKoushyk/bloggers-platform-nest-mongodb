@@ -12,15 +12,15 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { CurrentUser } from '../decorators/param/current-user.decorator';
-import { UserContextDto } from '../application/dto/user-context.dto';
+import type { AuthenticatedUser } from '../application/types/authenticated-user.type';
 import { CurrentUserViewDto } from './view-dto/current-user.view-dto';
 import { JwtAuthGuard } from '../guards/jwt/jwt-auth.guard';
 import { RegisterUserInputDto } from './input-dto/register-user.input-dto';
-import { ResendRegistrationConfirmationEmailInputDto } from './input-dto/resend-registration-confirmation-email.input-dto';
+import { ResendConfirmationEmailInputDto } from './input-dto/resend-confirmation-email.input-dto';
 import { ConfirmRegistrationInputDto } from './input-dto/confirm-registration.input-dto';
-import { StartPasswordRecoveryInputDto } from './input-dto/start-password-recovery.input-dto';
+import { RequestPasswordRecoveryInputDto } from './input-dto/request-password-recovery.input-dto';
 import { ResetPasswordInputDto } from './input-dto/reset-password.input-dto';
-import { LoginSuccessViewDto } from './view-dto/login-success.view-dto';
+import { AccessTokenViewDto } from './view-dto/access-token.view-dto';
 import { LoginInputDto } from './input-dto/login.input-dto';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { RegisterUserCommand } from '../application/usecases/register-user.usecase';
@@ -63,7 +63,7 @@ export class AuthController {
     @Ip() ip: string,
     @Headers('user-agent') userAgent: string,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<LoginSuccessViewDto> {
+  ): Promise<AccessTokenViewDto> {
     const loginResult = await this.commandBus.execute(
       new LoginUserCommand(dto.loginOrEmail, dto.password, ip, userAgent),
     );
@@ -75,6 +75,7 @@ export class AuthController {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
+      path: '/',
       maxAge: refreshTokenCookieMaxAge,
     });
     return { accessToken: loginResult.accessToken };
@@ -83,10 +84,10 @@ export class AuthController {
   @UseGuards(RefreshTokenAuthGuard)
   @Post('refresh-token')
   @HttpCode(HttpStatus.OK)
-  async rotateTokens(
+  async refreshTokens(
     @CurrentRefreshTokenContext() user: RefreshTokenContext,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<{ accessToken: string }> {
+  ): Promise<AccessTokenViewDto> {
     const result = await this.commandBus.execute(
       new RefreshTokensCommand(user),
     );
@@ -132,8 +133,8 @@ export class AuthController {
   @AuthRateLimit()
   @Post('registration-email-resending')
   @HttpCode(HttpStatus.NO_CONTENT)
-  resendRegistrationConfirmationEmail(
-    @Body() dto: ResendRegistrationConfirmationEmailInputDto,
+  resendConfirmationEmail(
+    @Body() dto: ResendConfirmationEmailInputDto,
   ): Promise<void> {
     return this.commandBus.execute(new ResendConfirmationEmailCommand(dto));
   }
@@ -148,8 +149,8 @@ export class AuthController {
   @AuthRateLimit()
   @Post('password-recovery')
   @HttpCode(HttpStatus.NO_CONTENT)
-  startPasswordRecovery(
-    @Body() dto: StartPasswordRecoveryInputDto,
+  requestPasswordRecovery(
+    @Body() dto: RequestPasswordRecoveryInputDto,
   ): Promise<void> {
     return this.commandBus.execute(new RequestPasswordRecoveryCommand(dto));
   }
@@ -165,8 +166,8 @@ export class AuthController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   getCurrentUser(
-    @CurrentUser() user: UserContextDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<CurrentUserViewDto> {
-    return this.queryBus.execute(new GetCurrentUserQuery(user.id));
+    return this.queryBus.execute(new GetCurrentUserQuery(user.userId));
   }
 }

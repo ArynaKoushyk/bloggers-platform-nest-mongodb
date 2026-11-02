@@ -31,7 +31,7 @@ export class RefreshTokensUseCase implements ICommandHandler<RefreshTokensComman
     if (!session) {
       throw new DomainException({
         code: DomainExceptionCode.Unauthorized,
-        message: 'Refresh token is invalid',
+        errorsMessages: [{ field: null, message: 'Refresh token is invalid' }],
       });
     }
 
@@ -65,7 +65,12 @@ export class RefreshTokensUseCase implements ICommandHandler<RefreshTokensComman
     if (rotationResult !== null) {
       throw new DomainException({
         code: DomainExceptionCode.Unauthorized,
-        message: `Refresh token rotation failed: ${rotationResult}`,
+        errorsMessages: [
+          {
+            field: null,
+            message: `Refresh token rotation failed: ${rotationResult}`,
+          },
+        ],
       });
     }
 

@@ -6,10 +6,3 @@ export type BlogReadModel = {
   createdAt: Date;
   isMembership: boolean;
 };
-
-export type BlogsPageReadModel = {
-  items: BlogReadModel[];
-  totalCount: number;
-  page: number;
-  pageSize: number;
-};

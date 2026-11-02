@@ -49,14 +49,14 @@ export class RefreshTokenStrategy extends PassportStrategy(
     if (!session) {
       throw new DomainException({
         code: DomainExceptionCode.Unauthorized,
-        message: 'Refresh token is invalid',
+        errorsMessages: [{ field: null, message: 'Refresh token is invalid' }],
       });
     }
 
     if (session.refreshTokenId !== payload.jti) {
       throw new DomainException({
         code: DomainExceptionCode.Unauthorized,
-        message: 'Refresh token is invalid',
+        errorsMessages: [{ field: null, message: 'Refresh token is invalid' }],
       });
     }
     const currentDate = new Date();
@@ -64,14 +64,14 @@ export class RefreshTokenStrategy extends PassportStrategy(
     if (session.expirationDate <= currentDate) {
       throw new DomainException({
         code: DomainExceptionCode.Unauthorized,
-        message: 'Refresh token is invalid',
+        errorsMessages: [{ field: null, message: 'Refresh token is invalid' }],
       });
     }
 
     if (session.userId !== payload.sub) {
       throw new DomainException({
         code: DomainExceptionCode.Unauthorized,
-        message: 'Refresh token is invalid',
+        errorsMessages: [{ field: null, message: 'Refresh token is invalid' }],
       });
     }
 

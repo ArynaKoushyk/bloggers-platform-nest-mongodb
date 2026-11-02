@@ -1,10 +1,10 @@
 import { IsEnum, IsOptional, IsString } from 'class-validator';
-import { BaseQueryParams } from '../../../../../core/dto/base-query-params.input-dto';
+import { BaseQueryParamsInputDto } from '../../../../../core/api/dto/base-query-params.input-dto';
 import { UserSortField } from './enums/user-sort-field.enum';
 import { UsersQueryParams } from '../../application/interfaces/users.query-repository.interface';
 
 export class GetUsersQueryParams
-  extends BaseQueryParams
+  extends BaseQueryParamsInputDto
   implements UsersQueryParams
 {
   @IsString()

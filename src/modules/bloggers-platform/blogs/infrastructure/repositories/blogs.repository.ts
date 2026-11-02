@@ -29,7 +29,7 @@ export class BlogsRepository implements IBlogsRepository {
     if (!blog) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
-        message: 'Blog is not found',
+        errorsMessages: [{ field: null, message: 'Blog is not found' }],
       });
     }
 

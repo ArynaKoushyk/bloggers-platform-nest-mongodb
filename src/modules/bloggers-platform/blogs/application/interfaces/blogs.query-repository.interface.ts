@@ -1,18 +1,8 @@
-import type {
-  BlogReadModel,
-  BlogsPageReadModel,
-} from '../read-models/blog.read-model';
-
-export interface BlogsQueryParams {
-  pageNumber: number;
-  pageSize: number;
-  sortBy: string;
-  sortDirection: 'asc' | 'desc';
-  searchNameTerm: string | null;
-  calculateSkip(): number;
-}
+import type { Page } from '../../../../../core/types/page.type';
+import type { BlogReadModel } from '../read-models/blog.read-model';
+import type { BlogsQueryOptions } from '../types/blogs-query-options.type';
 
 export interface IBlogsQueryRepository {
-  findAll(query: BlogsQueryParams): Promise<BlogsPageReadModel>;
+  findAll(options: BlogsQueryOptions): Promise<Page<BlogReadModel>>;
   findByIdOrFail(id: string): Promise<BlogReadModel>;
 }

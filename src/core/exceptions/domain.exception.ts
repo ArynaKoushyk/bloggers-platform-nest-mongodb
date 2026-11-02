@@ -1,18 +1,17 @@
 import { DomainExceptionCode } from './domain-exception-code.enum';
-import type { ErrorExtension } from './error-extension.type';
+import type { FieldError } from './field-error.type';
 
 export class DomainException extends Error {
   readonly code: DomainExceptionCode;
-  readonly extensions: ErrorExtension[];
+  readonly errorsMessages: FieldError[];
 
   constructor(errorInfo: {
     code: DomainExceptionCode;
-    message: string;
-    extensions?: ErrorExtension[];
+    errorsMessages: FieldError[];
   }) {
-    super(errorInfo.message);
+    super(errorInfo.errorsMessages[0]?.message ?? 'Application error');
     this.name = DomainException.name;
     this.code = errorInfo.code;
-    this.extensions = errorInfo.extensions ?? [];
+    this.errorsMessages = errorInfo.errorsMessages;
   }
 }

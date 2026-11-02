@@ -64,7 +64,7 @@ export class CommentsQueryRepository implements ICommentsQueryRepository {
     if (!comment) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
-        message: 'Comment not found ',
+        errorsMessages: [{ field: null, message: 'Comment not found ' }],
       });
     }
     return {

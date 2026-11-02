@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsString } from 'class-validator';
-import { Trim } from '../../../../../core/decorators/transform/trim.decorator';
+import { Trim } from '../../../../../core/api/decorators/transform/trim.decorator';
 
 export class LoginInputDto {
   @Trim()

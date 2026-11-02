@@ -7,7 +7,7 @@ import { BLOGS_REPOSITORY } from '../../../tokens/repository.tokens';
 
 export class UpdateBlogCommand extends Command<void> {
   constructor(
-    public readonly id: string,
+    public readonly blogId: string,
     public readonly dto: UpdateBlogDto,
   ) {
     super();
@@ -21,8 +21,8 @@ export class UpdateBlogUseCase implements ICommandHandler<UpdateBlogCommand> {
     private readonly blogsRepository: IBlogsRepository,
   ) {}
 
-  async execute({ id, dto }: UpdateBlogCommand): Promise<void> {
-    const blog = await this.blogsRepository.findByIdOrFail(id);
+  async execute({ blogId, dto }: UpdateBlogCommand): Promise<void> {
+    const blog = await this.blogsRepository.findByIdOrFail(blogId);
     const domainDto: UpdateBlogDomainDto = {
       name: dto.name,
       description: dto.description,

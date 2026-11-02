@@ -2,7 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { Inject } from '@nestjs/common';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-code.enum';
 import { DomainException } from '../../../../../core/exceptions/domain.exception';
-import { ResendRegistrationConfirmationEmailDto } from '../dto/resend-registration-confirmation-email.dto';
+import { ResendConfirmationEmailDto } from '../dto/resend-confirmation-email.dto';
 import { randomUUID } from 'crypto';
 import {
   Command,
@@ -15,7 +15,7 @@ import type { IUsersRepository } from '../../../users/application/interfaces/use
 import { USERS_REPOSITORY } from '../../../tokens/repository.tokens';
 
 export class ResendConfirmationEmailCommand extends Command<void> {
-  constructor(public readonly dto: ResendRegistrationConfirmationEmailDto) {
+  constructor(public readonly dto: ResendConfirmationEmailDto) {
     super();
   }
 }
@@ -34,12 +34,8 @@ export class ResendConfirmationEmailUseCase implements ICommandHandler<ResendCon
     if (!user) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
-        message: 'Email is not registered',
-        extensions: [
-          {
-            message: 'Email is not registered',
-            key: 'email',
-          },
+        errorsMessages: [
+          { field: 'email', message: 'Email is not registered' },
         ],
       });
     }
@@ -62,12 +58,8 @@ export class ResendConfirmationEmailUseCase implements ICommandHandler<ResendCon
     if (!isUpdated) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
-        message: 'Email is already confirmed',
-        extensions: [
-          {
-            message: 'Email is already confirmed',
-            key: 'email',
-          },
+        errorsMessages: [
+          { field: 'email', message: 'Email is already confirmed' },
         ],
       });
     }

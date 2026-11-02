@@ -71,11 +71,10 @@ export class UsersFactory {
     if (existingLogin) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
-        message: 'User with the same login already exists',
-        extensions: [
+        errorsMessages: [
           {
+            field: 'login',
             message: 'User with the same login already exists',
-            key: 'login',
           },
         ],
       });
@@ -86,11 +85,10 @@ export class UsersFactory {
     if (existingEmail) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
-        message: 'User with the same email already exists',
-        extensions: [
+        errorsMessages: [
           {
+            field: 'email',
             message: 'User with the same email already exists',
-            key: 'email',
           },
         ],
       });

@@ -14,11 +14,11 @@ import {
 } from '@nestjs/common';
 import { PostViewDto } from './view-dto/post.view-dto';
 import { GetPostsQueryParams } from './input-dto/get-posts-query-params.input-dto';
-import { PaginatedViewDto } from '../../../../core/dto/base-paginated.view-dto';
+import { BasePaginatedViewDto } from '../../../../core/api/dto/base-paginated.view-dto';
 import { CreatePostInputDto } from './input-dto/create-post.input-dto';
 import { UpdatePostInputDto } from './input-dto/update-post.input-dto';
 import { BasicAuthGuard } from '../../../user-accounts/auth/guards/basic/basic-auth.guard';
-import { ObjectIdValidationPipe } from '../../../../core/pipes/object-id-validation.pipe';
+import { ObjectIdValidationPipe } from '../../../../core/api/pipes/object-id-validation.pipe';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { CreatePostCommand } from '../application/usecases/create-post.usecase';
 import { UpdatePostCommand } from '../application/usecases/update-post.usecase';
@@ -30,7 +30,7 @@ import { LikeTargetType } from '../../likes/domain/enums/like-target-type.enum';
 import { UpdateLikeStatusInputDto } from '../../likes/api/input-dto/update-like-status.input-dto';
 import { JwtAuthGuard } from '../../../user-accounts/auth/guards/jwt/jwt-auth.guard';
 import { CurrentUser } from '../../../user-accounts/auth/decorators/param/current-user.decorator';
-import { UserContextDto } from '../../../user-accounts/auth/application/dto/user-context.dto';
+import type { AuthenticatedUser } from '../../../user-accounts/auth/application/types/authenticated-user.type';
 import { JwtOptionalAuthGuard } from '../../../user-accounts/auth/guards/jwt/jwt-optional-auth.guard';
 import { OptionalCurrentUser } from '../../../user-accounts/auth/decorators/param/optional-current-user.decorator';
 
@@ -48,7 +48,7 @@ export class PostsController {
   @Get(':id')
   async getPostById(
     @Param('id', ObjectIdValidationPipe) id: string,
-    @OptionalCurrentUser('id') userId: string | null,
+    @OptionalCurrentUser('userId') userId: string | null,
   ): Promise<PostViewDto> {
     return await this.queryBus.execute(new GetPostByIdQuery(id, userId));
   }
@@ -57,8 +57,8 @@ export class PostsController {
   @Get()
   async getPosts(
     @Query() queryParams: GetPostsQueryParams,
-    @OptionalCurrentUser('id') userId: string | null,
-  ): Promise<PaginatedViewDto<PostViewDto[]>> {
+    @OptionalCurrentUser('userId') userId: string | null,
+  ): Promise<BasePaginatedViewDto<PostViewDto>> {
     return await this.queryBus.execute(new GetPostsQuery(queryParams, userId));
   }
 
@@ -66,7 +66,7 @@ export class PostsController {
   @Post()
   async createPost(
     @Body() dto: CreatePostInputDto,
-    @OptionalCurrentUser('id') userId: string | null,
+    @OptionalCurrentUser('userId') userId: string | null,
   ): Promise<PostViewDto> {
     const postId = await this.commandBus.execute(new CreatePostCommand(dto));
 
@@ -100,7 +100,7 @@ export class PostsController {
     @Param('postId', ObjectIdValidationPipe) postId: string,
     @Body() dto: UpdateLikeStatusInputDto,
     @CurrentUser()
-    user: UserContextDto,
+    user: AuthenticatedUser,
   ): Promise<void> {
     return await this.commandBus.execute(
       new UpdateLikeStatusCommand(

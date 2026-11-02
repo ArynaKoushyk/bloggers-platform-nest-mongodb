@@ -1,11 +1,10 @@
 import { IQueryHandler, Query, QueryHandler } from '@nestjs/cqrs';
 import { Inject } from '@nestjs/common';
-import { BlogViewDto } from '../../api/view-dto/blog.view-dto';
-import { BlogViewMapper } from '../mappers/blog-view.mapper';
+import type { BlogReadModel } from '../read-models/blog.read-model';
 import type { IBlogsQueryRepository } from '../interfaces/blogs.query-repository.interface';
 import { BLOGS_QUERY_REPOSITORY } from '../../../tokens/repository.tokens';
 
-export class GetBlogByIdQuery extends Query<BlogViewDto> {
+export class GetBlogByIdQuery extends Query<BlogReadModel> {
   constructor(public readonly blogId: string) {
     super();
   }
@@ -18,8 +17,7 @@ export class GetBlogByIdQueryHandler implements IQueryHandler<GetBlogByIdQuery> 
     private readonly blogsQueryRepository: IBlogsQueryRepository,
   ) {}
 
-  async execute({ blogId }: GetBlogByIdQuery): Promise<BlogViewDto> {
-    const blog = await this.blogsQueryRepository.findByIdOrFail(blogId);
-    return BlogViewMapper.toView(blog);
+  execute({ blogId }: GetBlogByIdQuery): Promise<BlogReadModel> {
+    return this.blogsQueryRepository.findByIdOrFail(blogId);
   }
 }

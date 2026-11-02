@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PasswordHashAdapter } from '../../users/infrastructure/adapters/password-hash.adapter';
-import { UserContextDto } from './dto/user-context.dto';
+import type { AuthenticatedUser } from './types/authenticated-user.type';
 import { DomainException } from '../../../../core/exceptions/domain.exception';
 import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-code.enum';
 import type { IUsersRepository } from '../../users/application/interfaces/users.repository.interface';
@@ -17,12 +17,12 @@ export class AuthService {
   async validateCredentials(
     loginOrEmail: string,
     password: string,
-  ): Promise<UserContextDto> {
+  ): Promise<AuthenticatedUser> {
     const user = await this.usersRepository.findByLoginOrEmail(loginOrEmail);
     if (!user) {
       throw new DomainException({
         code: DomainExceptionCode.Unauthorized,
-        message: 'Invalid credentials',
+        errorsMessages: [{ field: null, message: 'Invalid credentials' }],
       });
     }
     const isPasswordValid = await this.passwordHashAdapter.verifyPassword({
@@ -33,12 +33,12 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new DomainException({
         code: DomainExceptionCode.Unauthorized,
-        message: 'Invalid credentials',
+        errorsMessages: [{ field: null, message: 'Invalid credentials' }],
       });
     }
 
     return {
-      id: user.id,
+      userId: user.id,
       login: user.login,
     };
   }

@@ -1,7 +1,7 @@
 import { Inject } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import type { UserContextDto } from '../../../../user-accounts/auth/application/dto/user-context.dto';
+import type { AuthenticatedUser } from '../../../../user-accounts/auth/application/types/authenticated-user.type';
 import type { ICommentsRepository } from '../../../comments/application/interfaces/comments.repository.interface';
 import type { IPostsRepository } from '../../../posts/application/interfaces/posts.repository.interface';
 import {
@@ -29,7 +29,7 @@ export class UpdateLikeStatusCommand extends Command<void> {
     public readonly targetId: string,
     public readonly targetType: LikeTargetType,
     public readonly likeStatus: LikeStatus,
-    public readonly user: UserContextDto,
+    public readonly user: AuthenticatedUser,
   ) {
     super();
   }
@@ -56,7 +56,7 @@ export class UpdateLikeStatusUseCase implements ICommandHandler<UpdateLikeStatus
   }: UpdateLikeStatusCommand): Promise<void> {
     const targetContext = await this.getTargetContext(targetId, targetType);
     const currentLike = await this.likesRepository.findByAuthorAndTarget(
-      user.id,
+      user.userId,
       targetId,
       targetType,
     );
@@ -79,7 +79,7 @@ export class UpdateLikeStatusUseCase implements ICommandHandler<UpdateLikeStatus
       const like = this.likeModel.createInstance({
         targetId,
         targetType,
-        authorId: user.id,
+        authorId: user.userId,
         authorLogin: user.login,
         status: likeStatus,
       });

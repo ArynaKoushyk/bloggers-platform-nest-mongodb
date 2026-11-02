@@ -1,6 +1,7 @@
 import { IQueryHandler, Query, QueryHandler } from '@nestjs/cqrs';
 import { Inject } from '@nestjs/common';
-import { PaginatedViewDto } from '../../../../../core/dto/base-paginated.view-dto';
+import type { BasePaginatedViewDto } from '../../../../../core/api/dto/base-paginated.view-dto';
+import { BasePaginatedViewMapper } from '../../../../../core/api/mappers/base-paginated-view.mapper';
 import { PostViewDto } from '../../api/view-dto/post.view-dto';
 import { GetPostsQueryParams } from '../../api/input-dto/get-posts-query-params.input-dto';
 import { PostViewMapper } from '../mappers/post-view.mapper';
@@ -13,7 +14,7 @@ import {
 } from '../../../tokens/repository.tokens';
 import { LikeStatus } from '../../../likes/domain/enums/like-status.enum';
 
-export class GetPostsQuery extends Query<PaginatedViewDto<PostViewDto[]>> {
+export class GetPostsQuery extends Query<BasePaginatedViewDto<PostViewDto>> {
   constructor(
     public readonly queryParams: GetPostsQueryParams,
     public readonly userId: string | null,
@@ -34,7 +35,7 @@ export class GetPostsQueryHandler implements IQueryHandler<GetPostsQuery> {
   async execute({
     queryParams,
     userId,
-  }: GetPostsQuery): Promise<PaginatedViewDto<PostViewDto[]>> {
+  }: GetPostsQuery): Promise<BasePaginatedViewDto<PostViewDto>> {
     const postsPage = await this.postsQueryRepository.findAll(queryParams);
 
     const postIds = postsPage.items.map((post) => post.id);
@@ -58,10 +59,10 @@ export class GetPostsQueryHandler implements IQueryHandler<GetPostsQuery> {
       );
     });
 
-    return PaginatedViewDto.mapToView({
+    return BasePaginatedViewMapper.mapToView({
       items,
       page: postsPage.page,
-      size: postsPage.pageSize,
+      pageSize: postsPage.pageSize,
       totalCount: postsPage.totalCount,
     });
   }

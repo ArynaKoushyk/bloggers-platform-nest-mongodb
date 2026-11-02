@@ -1,15 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { Blog } from '../../domain/blog.entity';
-import type { BlogModelType } from '../../domain/blog.entity';
+import type { BlogDocument, BlogModelType } from '../../domain/blog.entity';
 import { InjectModel } from '@nestjs/mongoose';
-import { GetBlogsQueryParams } from '../../api/input-dto/get-blogs-query-params.input-dto';
+import type { BlogsQueryOptions } from '../../application/types/blogs-query-options.type';
 import { FilterQuery } from 'mongoose';
 import { DomainException } from '../../../../../core/exceptions/domain.exception';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-code.enum';
-import {
-  BlogReadModel,
-  BlogsPageReadModel,
-} from '../../application/read-models/blog.read-model';
+import { calculateSkip } from '../../../../../core/pagination/calculate-skip.util';
+import type { Page } from '../../../../../core/types/page.type';
+import type { BlogReadModel } from '../../application/read-models/blog.read-model';
 import type { IBlogsQueryRepository } from '../../application/interfaces/blogs.query-repository.interface';
 
 @Injectable()
@@ -18,17 +17,17 @@ export class BlogsQueryRepository implements IBlogsQueryRepository {
     @InjectModel(Blog.name)
     private readonly blogModel: BlogModelType,
   ) {}
-  async findAll(query: GetBlogsQueryParams): Promise<BlogsPageReadModel> {
-    const { pageNumber, pageSize, sortBy, sortDirection } = query;
-    const skip = query.calculateSkip();
+  async findAll(options: BlogsQueryOptions): Promise<Page<BlogReadModel>> {
+    const { pageNumber, pageSize, sortBy, sortDirection } = options;
+    const skip = calculateSkip(pageNumber, pageSize);
     const limit = pageSize;
     const filter: FilterQuery<Blog> = {
       deletedAt: null,
     };
 
-    if (query.searchNameTerm) {
+    if (options.searchNameTerm) {
       filter.name = {
-        $regex: query.searchNameTerm,
+        $regex: options.searchNameTerm,
         $options: 'i',
       };
     }
@@ -43,14 +42,7 @@ export class BlogsQueryRepository implements IBlogsQueryRepository {
 
     const totalCount = await this.blogModel.countDocuments(filter);
 
-    const blogReadModels: BlogReadModel[] = blogs.map((blog) => ({
-      id: blog._id.toString(),
-      name: blog.name,
-      description: blog.description,
-      websiteUrl: blog.websiteUrl,
-      createdAt: blog.createdAt,
-      isMembership: blog.isMembership,
-    }));
+    const blogReadModels = blogs.map((blog) => this.toReadModel(blog));
 
     return {
       items: blogReadModels,
@@ -72,11 +64,25 @@ export class BlogsQueryRepository implements IBlogsQueryRepository {
     if (!blog) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
-        message: 'Blog not found ',
+        errorsMessages: [{ field: null, message: 'Blog not found ' }],
       });
     }
 
-    const blogReadModel: BlogReadModel = {
+    return this.toReadModel(blog);
+  }
+
+  private toReadModel(
+    blog: Pick<
+      BlogDocument,
+      | '_id'
+      | 'name'
+      | 'description'
+      | 'websiteUrl'
+      | 'createdAt'
+      | 'isMembership'
+    >,
+  ): BlogReadModel {
+    return {
       id: blog._id.toString(),
       name: blog.name,
       description: blog.description,
@@ -84,7 +90,5 @@ export class BlogsQueryRepository implements IBlogsQueryRepository {
       createdAt: blog.createdAt,
       isMembership: blog.isMembership,
     };
-
-    return blogReadModel;
   }
 }

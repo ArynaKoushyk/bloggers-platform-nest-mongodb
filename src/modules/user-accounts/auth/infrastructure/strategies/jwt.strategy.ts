@@ -1,7 +1,7 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Inject, Injectable } from '@nestjs/common';
-import { UserContextDto } from '../../application/dto/user-context.dto';
+import type { AuthenticatedUser } from '../../application/types/authenticated-user.type';
 import { ConfigService } from '@nestjs/config';
 import { AccessTokenPayload } from '../../application/types/access-token-payload.type';
 import { DomainException } from '../../../../../core/exceptions/domain.exception';
@@ -26,18 +26,18 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
   //функция принимает payload из jwt токена и возвращает то, что впоследствии будет записано в req.user
-  async validate(payload: AccessTokenPayload): Promise<UserContextDto> {
+  async validate(payload: AccessTokenPayload): Promise<AuthenticatedUser> {
     const user = await this.usersRepository.findById(payload.sub);
 
     if (!user) {
       throw new DomainException({
         code: DomainExceptionCode.Unauthorized,
-        message: 'Unauthorized',
+        errorsMessages: [{ field: null, message: 'Unauthorized' }],
       });
     }
 
     return {
-      id: user.id,
+      userId: user.id,
       login: user.login,
     };
   }

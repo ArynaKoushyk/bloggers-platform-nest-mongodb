@@ -1,10 +1,10 @@
 import { IsEnum, IsOptional, IsString } from 'class-validator';
-import { BaseQueryParams } from '../../../../../core/dto/base-query-params.input-dto';
+import { BaseQueryParamsInputDto } from '../../../../../core/api/dto/base-query-params.input-dto';
 import { PostSortField } from './enums/post-sort-field.enum';
 import { PostsQueryParams } from '../../application/interfaces/posts.query-repository.interface';
 
 export class GetPostsQueryParams
-  extends BaseQueryParams
+  extends BaseQueryParamsInputDto
   implements PostsQueryParams
 {
   @IsEnum(PostSortField)

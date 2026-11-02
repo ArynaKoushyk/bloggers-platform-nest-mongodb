@@ -10,13 +10,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CommentViewDto } from './view-dto/comment.view-dto';
-import { ObjectIdValidationPipe } from '../../../../core/pipes/object-id-validation.pipe';
+import { ObjectIdValidationPipe } from '../../../../core/api/pipes/object-id-validation.pipe';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetCommentByIdQuery } from '../application/queries/get-comment-by-id.query-handler';
 import { JwtAuthGuard } from '../../../user-accounts/auth/guards/jwt/jwt-auth.guard';
 import { UpdateLikeStatusInputDto } from '../../likes/api/input-dto/update-like-status.input-dto';
 import { CurrentUser } from '../../../user-accounts/auth/decorators/param/current-user.decorator';
-import { UserContextDto } from '../../../user-accounts/auth/application/dto/user-context.dto';
+import type { AuthenticatedUser } from '../../../user-accounts/auth/application/types/authenticated-user.type';
 import { UpdateLikeStatusCommand } from '../../likes/application/usecases/update-like-status.usecase';
 import { LikeTargetType } from '../../likes/domain/enums/like-target-type.enum';
 import { JwtOptionalAuthGuard } from '../../../user-accounts/auth/guards/jwt/jwt-optional-auth.guard';
@@ -36,7 +36,7 @@ export class CommentsController {
   @Get(':id')
   async getCommentById(
     @Param('id', ObjectIdValidationPipe) id: string,
-    @OptionalCurrentUser('id') userId: string | null,
+    @OptionalCurrentUser('userId') userId: string | null,
   ): Promise<CommentViewDto> {
     return await this.queryBus.execute(new GetCommentByIdQuery(id, userId));
   }
@@ -48,10 +48,10 @@ export class CommentsController {
     @Param('commentId', ObjectIdValidationPipe) commentId: string,
     @Body() dto: UpdateCommentInputDto,
     @CurrentUser()
-    user: UserContextDto,
+    user: AuthenticatedUser,
   ): Promise<void> {
     return await this.commandBus.execute(
-      new UpdateCommentCommand(commentId, user.id, dto),
+      new UpdateCommentCommand(commentId, user.userId, dto),
     );
   }
 
@@ -61,10 +61,10 @@ export class CommentsController {
   async deleteComment(
     @Param('commentId', ObjectIdValidationPipe) commentId: string,
     @CurrentUser()
-    user: UserContextDto,
+    user: AuthenticatedUser,
   ): Promise<void> {
     return await this.commandBus.execute(
-      new DeleteCommentCommand(commentId, user.id),
+      new DeleteCommentCommand(commentId, user.userId),
     );
   }
 
@@ -75,7 +75,7 @@ export class CommentsController {
     @Param('commentId', ObjectIdValidationPipe) commentId: string,
     @Body() dto: UpdateLikeStatusInputDto,
     @CurrentUser()
-    user: UserContextDto,
+    user: AuthenticatedUser,
   ): Promise<void> {
     return await this.commandBus.execute(
       new UpdateLikeStatusCommand(

@@ -1,4 +1,5 @@
-import { PaginatedViewDto } from '../../../../../core/dto/base-paginated.view-dto';
+import type { BasePaginatedViewDto } from '../../../../../core/api/dto/base-paginated.view-dto';
+import { BasePaginatedViewMapper } from '../../../../../core/api/mappers/base-paginated-view.mapper';
 import { PostViewDto } from '../../api/view-dto/post.view-dto';
 import { GetPostsQueryParams } from '../../api/input-dto/get-posts-query-params.input-dto';
 import { IQueryHandler, Query, QueryHandler } from '@nestjs/cqrs';
@@ -15,7 +16,9 @@ import {
 } from '../../../tokens/repository.tokens';
 import { LikeStatus } from '../../../likes/domain/enums/like-status.enum';
 
-export class GetBlogPostsQuery extends Query<PaginatedViewDto<PostViewDto[]>> {
+export class GetBlogPostsQuery extends Query<
+  BasePaginatedViewDto<PostViewDto>
+> {
   constructor(
     public readonly blogId: string,
     public readonly queryParams: GetPostsQueryParams,
@@ -40,7 +43,7 @@ export class GetBlogPostsQueryHandler implements IQueryHandler<GetBlogPostsQuery
     queryParams,
     blogId,
     userId,
-  }: GetBlogPostsQuery): Promise<PaginatedViewDto<PostViewDto[]>> {
+  }: GetBlogPostsQuery): Promise<BasePaginatedViewDto<PostViewDto>> {
     await this.blogsQueryRepository.findByIdOrFail(blogId);
 
     const postsPage = await this.postsQueryRepository.findAllByBlogId(
@@ -68,10 +71,10 @@ export class GetBlogPostsQueryHandler implements IQueryHandler<GetBlogPostsQuery
       );
     });
 
-    return PaginatedViewDto.mapToView({
+    return BasePaginatedViewMapper.mapToView({
       items,
       page: postsPage.page,
-      size: postsPage.pageSize,
+      pageSize: postsPage.pageSize,
       totalCount: postsPage.totalCount,
     });
   }

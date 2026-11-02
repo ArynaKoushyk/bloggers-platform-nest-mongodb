@@ -1,12 +1,8 @@
 import { IsEnum, IsOptional, IsString } from 'class-validator';
-import { BaseQueryParams } from '../../../../../core/dto/base-query-params.input-dto';
-import { BlogSortField } from './enums/blog-sort-field.enum';
-import { BlogsQueryParams } from '../../application/interfaces/blogs.query-repository.interface';
+import { BaseQueryParamsInputDto } from '../../../../../core/api/dto/base-query-params.input-dto';
+import { BlogSortField } from '../../application/enums/blog-sort-field.enum';
 
-export class GetBlogsQueryParams
-  extends BaseQueryParams
-  implements BlogsQueryParams
-{
+export class GetBlogsQueryParamsInputDto extends BaseQueryParamsInputDto {
   @IsEnum(BlogSortField)
   sortBy = BlogSortField.CreatedAt;
 

@@ -2,7 +2,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Inject } from '@nestjs/common';
 import { Comment, type CommentModelType } from '../../domain/comment.entity';
 import { CreateCommentDto } from '../dto/create-comment.dto';
-import { UserContextDto } from '../../../../user-accounts/auth/application/dto/user-context.dto';
+import type { AuthenticatedUser } from '../../../../user-accounts/auth/application/types/authenticated-user.type';
 import { CreateCommentDomainDto } from '../../domain/dto/create-comment.domain.dto';
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import type { ICommentsRepository } from '../interfaces/comments.repository.interface';
@@ -16,7 +16,7 @@ export class CreateCommentCommand extends Command<string> {
   constructor(
     public readonly postId: string,
     public readonly dto: CreateCommentDto,
-    public readonly user: UserContextDto,
+    public readonly user: AuthenticatedUser,
   ) {
     super();
   }
@@ -41,7 +41,7 @@ export class CreateCommentUseCase implements ICommandHandler<CreateCommentComman
       postId,
       content,
       commentatorInfo: {
-        userId: user.id,
+        userId: user.userId,
         userLogin: user.login,
       },
     };
