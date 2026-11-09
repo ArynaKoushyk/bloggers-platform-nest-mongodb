@@ -1,16 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import type { SignOptions } from 'jsonwebtoken';
 import type { AccessTokenPayload } from '../../application/types/access-token-payload.type';
 import { RefreshTokenPayload } from '../../application/types/refresh-token-payload.type';
 import { randomUUID } from 'crypto';
+import { UserAccountsConfig } from '../../../config/user-accounts.config';
 
 @Injectable()
 export class JwtAdapter {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
+    private readonly config: UserAccountsConfig,
   ) {}
 
   async createAccessToken(userId: string): Promise<string> {
@@ -19,10 +18,8 @@ export class JwtAdapter {
     };
 
     return await this.jwtService.signAsync(payload, {
-      secret: this.configService.getOrThrow<string>('ACCESS_TOKEN_SECRET'),
-      expiresIn: this.configService.getOrThrow<SignOptions['expiresIn']>(
-        'JWT_ACCESS_TOKEN_EXPIRES_IN',
-      ),
+      secret: this.config.accessTokenSecret,
+      expiresIn: this.config.jwtAccessTokenExpireIn,
     });
   }
 
@@ -35,10 +32,8 @@ export class JwtAdapter {
     const refreshTokenId = randomUUID();
 
     return this.jwtService.signAsync(payload, {
-      secret: this.configService.getOrThrow<string>('REFRESH_TOKEN_SECRET'),
-      expiresIn: this.configService.getOrThrow<SignOptions['expiresIn']>(
-        'JWT_REFRESH_TOKEN_EXPIRES_IN',
-      ),
+      secret: this.config.refreshTokenSecret,
+      expiresIn: this.config.jwtRefreshTokenExpireIn,
       jwtid: refreshTokenId,
     });
   }

@@ -13,6 +13,7 @@ import {
 import { ConfirmationCodeRenewedEvent } from '../events/confirmation-code-renewed.event';
 import type { IUsersRepository } from '../../../users/application/interfaces/users.repository.interface';
 import { USERS_REPOSITORY } from '../../../tokens/repository.tokens';
+import { UserAccountsConfig } from '../../../config/user-accounts.config';
 
 export class ResendConfirmationEmailCommand extends Command<void> {
   constructor(public readonly dto: ResendConfirmationEmailDto) {
@@ -24,7 +25,7 @@ export class ResendConfirmationEmailUseCase implements ICommandHandler<ResendCon
   constructor(
     @Inject(USERS_REPOSITORY)
     private readonly usersRepository: IUsersRepository,
-    private readonly configService: ConfigService,
+    private readonly config: UserAccountsConfig,
     private readonly eventBus: EventBus,
   ) {}
 
@@ -42,9 +43,7 @@ export class ResendConfirmationEmailUseCase implements ICommandHandler<ResendCon
 
     const newConfirmationCode = randomUUID();
 
-    const ttlSeconds = Number(
-      this.configService.getOrThrow<string>('CONFIRMATION_CODE_TTL_SECONDS'),
-    );
+    const ttlSeconds = this.config.confirmationCodeTtlSeconds;
 
     const newConfirmationCodeExpirationDate = new Date(
       Date.now() + ttlSeconds * 1000,

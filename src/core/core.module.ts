@@ -7,6 +7,7 @@ import {
   AUTH_RATE_LIMIT_MAX_REQUESTS,
   AUTH_RATE_LIMIT_TTL,
 } from './rate-limit/rate-limit.constants';
+import { CoreConfig } from './core.config';
 
 //глобальный модуль для провайдеров и модулей необходимых во всех частях приложения (например LoggerService, CqrsModule, etc...)
 @Global()
@@ -30,6 +31,8 @@ import {
       provide: APP_FILTER,
       useClass: DomainExceptionFilter,
     },
+    CoreConfig,
   ],
+  exports: [CoreConfig],
 })
 export class CoreModule {}

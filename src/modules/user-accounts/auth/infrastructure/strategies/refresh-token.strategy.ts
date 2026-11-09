@@ -9,6 +9,7 @@ import { RefreshTokenPayload } from '../../application/types/refresh-token-paylo
 import { RefreshTokenContext } from '../../application/types/refresh-token-context.type';
 import { Request } from 'express';
 import { type IAuthSessionsRepository } from '../../../security-devices/application/interfaces/auth-sessions.repository.interface';
+import { UserAccountsConfig } from '../../../config/user-accounts.config';
 
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(
@@ -16,13 +17,11 @@ export class RefreshTokenStrategy extends PassportStrategy(
   'jwt-refresh',
 ) {
   constructor(
-    configService: ConfigService,
+    config: UserAccountsConfig,
     @Inject(AUTH_SESSIONS_REPOSITORY)
     private readonly authSessionsRepository: IAuthSessionsRepository,
   ) {
-    const refreshSecretKey = configService.getOrThrow<string>(
-      'REFRESH_TOKEN_SECRET',
-    );
+    const refreshSecretKey = config.refreshTokenSecret;
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: Request): string | null => {

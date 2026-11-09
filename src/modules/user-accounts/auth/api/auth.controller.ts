@@ -38,13 +38,14 @@ import { type RefreshTokenContext } from '../application/types/refresh-token-con
 import { RefreshTokensCommand } from '../application/usecases/refresh-tokens.usecase';
 import { LogoutUserCommand } from '../application/usecases/logout-user.usecase';
 import { AuthRateLimit } from './decorators/auth-rate-limit.decorator';
+import { UserAccountsConfig } from '../../config/user-accounts.config';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
-    private readonly configService: ConfigService,
+    private readonly config: UserAccountsConfig,
   ) {}
 
   @AuthRateLimit()
@@ -68,9 +69,7 @@ export class AuthController {
       new LoginUserCommand(dto.loginOrEmail, dto.password, ip, userAgent),
     );
 
-    const refreshTokenCookieMaxAge = Number(
-      this.configService.getOrThrow<string>('REFRESH_TOKEN_COOKIE_MAX_AGE_MS'),
-    );
+    const refreshTokenCookieMaxAge = this.config.refreshTokenCookieMaxAgeMs;
     response.cookie('refreshToken', loginResult.refreshToken, {
       httpOnly: true,
       secure: true,
@@ -92,9 +91,7 @@ export class AuthController {
       new RefreshTokensCommand(user),
     );
 
-    const refreshTokenCookieMaxAge = Number(
-      this.configService.getOrThrow<string>('REFRESH_TOKEN_COOKIE_MAX_AGE_MS'),
-    );
+    const refreshTokenCookieMaxAge = this.config.refreshTokenCookieMaxAgeMs;
     response.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
       secure: true,

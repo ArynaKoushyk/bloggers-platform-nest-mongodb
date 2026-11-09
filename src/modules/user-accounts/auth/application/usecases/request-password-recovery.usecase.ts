@@ -11,6 +11,7 @@ import {
 import { RecoveryCodeCreatedEvent } from '../events/recovery-code-created.event';
 import type { IUsersRepository } from '../../../users/application/interfaces/users.repository.interface';
 import { USERS_REPOSITORY } from '../../../tokens/repository.tokens';
+import { UserAccountsConfig } from '../../../config/user-accounts.config';
 
 export class RequestPasswordRecoveryCommand extends Command<void> {
   constructor(public readonly dto: RequestPasswordRecoveryDto) {
@@ -23,7 +24,7 @@ export class RequestPasswordRecoveryUseCase implements ICommandHandler<RequestPa
   constructor(
     @Inject(USERS_REPOSITORY)
     private readonly usersRepository: IUsersRepository,
-    private readonly configService: ConfigService,
+    private readonly config: UserAccountsConfig,
     private readonly eventBus: EventBus,
   ) {}
 
@@ -36,9 +37,7 @@ export class RequestPasswordRecoveryUseCase implements ICommandHandler<RequestPa
 
     const recoveryCode = randomUUID();
 
-    const ttlSeconds = Number(
-      this.configService.getOrThrow<string>('RECOVERY_CODE_TTL_SECONDS'),
-    );
+    const ttlSeconds = this.config.recoveryCodeTtlSeconds;
 
     const recoveryCodeExpirationDate = new Date(Date.now() + ttlSeconds * 1000);
 

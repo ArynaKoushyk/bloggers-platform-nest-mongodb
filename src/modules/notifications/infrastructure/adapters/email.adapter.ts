@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
-import { ConfigService } from '@nestjs/config';
+import { NotificationsConfig } from '../../config/notifications.config';
 
 @Injectable()
 export class EmailAdapter {
   constructor(
     private readonly mailerService: MailerService,
-    private readonly configService: ConfigService,
+    private readonly config: NotificationsConfig,
   ) {}
 
   async sendRegistrationConfirmation(
     email: string,
     confirmationCode: string,
   ): Promise<void> {
-    const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
+    const frontendUrl = this.config.frontendUrl;
 
     const confirmationUrl = new URL('/confirm-registration', frontendUrl);
     confirmationUrl.searchParams.set('code', confirmationCode);
@@ -33,7 +33,7 @@ export class EmailAdapter {
     email: string,
     recoveryCode: string,
   ): Promise<void> {
-    const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
+    const frontendUrl = this.config.frontendUrl;
 
     const recoveryUrl = new URL('/password-recovery', frontendUrl);
     recoveryUrl.searchParams.set('recoveryCode', recoveryCode);

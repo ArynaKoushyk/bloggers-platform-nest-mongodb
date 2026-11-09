@@ -47,6 +47,7 @@ import { TerminateOtherDeviceSessionsUseCase } from './security-devices/applicat
 import { GetSecurityDevicesQueryHandler } from './security-devices/application/queries/get-security-devices.query-handler';
 import { LogoutUserUseCase } from './auth/application/usecases/logout-user.usecase';
 import { SecurityDevicesController } from './security-devices/api/security-devices.controller';
+import { UserAccountsConfig } from './config/user-accounts.config';
 
 const useCases = [
   CreateUserUseCase,
@@ -126,7 +127,8 @@ const policies = [AuthSessionAccessPolicy];
     JwtStrategy,
     RefreshTokenStrategy,
     JwtAdapter,
+    UserAccountsConfig,
   ],
-  exports: [JwtStrategy],
+  exports: [JwtStrategy, UserAccountsConfig],
 })
 export class UserAccountsModule {}

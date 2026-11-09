@@ -1,5 +1,4 @@
 import type { INestApplication } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { CommandBus, CqrsModule } from '@nestjs/cqrs';
 import { APP_FILTER } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
@@ -11,6 +10,7 @@ import { AllExceptionsFilter } from '../../../../core/api/filters/all-exceptions
 import { DomainExceptionFilter } from '../../../../core/api/filters/domain-exception.filter';
 import type { Page } from '../../../../core/types/page.type';
 import { setupGlobalPipes } from '../../../../setup/pipes.setup';
+import { UserAccountsConfig } from '../../../user-accounts/config/user-accounts.config';
 import { BLOGS_QUERY_REPOSITORY } from '../../tokens/repository.tokens';
 import type { IBlogsQueryRepository } from '../application/interfaces/blogs.query-repository.interface';
 import { GetBlogByIdQueryHandler } from '../application/queries/get-blog-by-id.query-handler';
@@ -51,10 +51,6 @@ describe('Blogs HTTP contract', () => {
   };
 
   beforeAll(async () => {
-    const credentials: Record<string, string> = {
-      ADMIN_LOGIN: 'admin',
-      ADMIN_PASSWORD: 'test-password',
-    };
     const module = await Test.createTestingModule({
       imports: [CqrsModule.forRoot()],
       controllers: [BlogsController],
@@ -65,8 +61,8 @@ describe('Blogs HTTP contract', () => {
         GetBlogByIdQueryHandler,
         { provide: BLOGS_QUERY_REPOSITORY, useValue: repository },
         {
-          provide: ConfigService,
-          useValue: { getOrThrow: (key: string) => credentials[key] },
+          provide: UserAccountsConfig,
+          useValue: { adminLogin: 'admin', adminPassword: 'test-password' },
         },
       ],
     }).compile();

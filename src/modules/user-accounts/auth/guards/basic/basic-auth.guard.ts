@@ -4,6 +4,7 @@ import { Request } from 'express';
 import { DomainException } from '../../../../../core/exceptions/domain.exception';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-code.enum';
 import { ConfigService } from '@nestjs/config';
+import { UserAccountsConfig } from '../../../config/user-accounts.config';
 
 @Injectable()
 export class BasicAuthGuard implements CanActivate {
@@ -12,10 +13,10 @@ export class BasicAuthGuard implements CanActivate {
 
   constructor(
     private reflector: Reflector,
-    private configService: ConfigService,
+    private config: UserAccountsConfig,
   ) {
-    this.validUsername = configService.getOrThrow<string>('ADMIN_LOGIN');
-    this.validPassword = configService.getOrThrow<string>('ADMIN_PASSWORD');
+    this.validUsername = config.adminLogin;
+    this.validPassword = config.adminPassword;
   }
 
   canActivate(context: ExecutionContext): boolean {

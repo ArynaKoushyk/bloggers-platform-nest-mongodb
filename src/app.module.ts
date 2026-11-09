@@ -1,42 +1,39 @@
-import { Module } from '@nestjs/common';
+import { configModule } from './config-dynamic-module';
+import { Module, type DynamicModule } from '@nestjs/common';
 import { CoreModule } from './core/core.module';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BloggersPlatformModule } from './modules/bloggers-platform/bloggers-platform.module';
 import { UserAccountsModule } from './modules/user-accounts/user-accounts.module';
 import { TestingModule } from './modules/testing/testing.module';
 import { CqrsModule } from '@nestjs/cqrs';
-
-// export const configModule = ConfigModule.forRoot({
-//   envFilePath: [
-//     process.env.ENV_FILE_PATH?.trim() || '',
-//     `.env.${process.env.NODE_ENV}.local`,
-//     `.env.${process.env.NODE_ENV}`,
-//     '.env.production',
-//   ],
-//   isGlobal: true,
-// });
+import { CoreConfig, Environments } from './core/core.config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
-    }),
-
     MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        uri: configService.getOrThrow<string>('MONGO_URL'),
-        dbName: configService.getOrThrow<string>('DB_NAME'),
+      imports: [CoreModule],
+      inject: [CoreConfig],
+      useFactory: (coreConfig: CoreConfig) => ({
+        uri: coreConfig.mongoURI,
+        dbName: coreConfig.dbName,
       }),
     }),
     CoreModule,
     BloggersPlatformModule,
     UserAccountsModule,
-    TestingModule,
     CqrsModule.forRoot(),
+    configModule,
   ],
 })
-export class AppModule {}
+export class AppModule {
+  static forRoot(coreConfig: CoreConfig): DynamicModule {
+    const includeTestingModule =
+      coreConfig.env === Environments.TESTING &&
+      coreConfig.includeTestingModule;
+
+    return {
+      module: AppModule,
+      imports: includeTestingModule ? [TestingModule] : [],
+    };
+  }
+}

@@ -21,11 +21,15 @@ import request from 'supertest';
 import type { App } from 'supertest/types';
 import { LoginInputDto } from '../../../modules/user-accounts/auth/api/input-dto/login.input-dto';
 import { setupGlobalPipes } from '../../../setup/pipes.setup';
+import { CoreConfig } from '../../core.config';
 import { CoreModule } from '../../core.module';
 import { DomainExceptionCode } from '../../exceptions/domain-exception-code.enum';
 import { DomainException } from '../../exceptions/domain.exception';
 import { IsStringWithTrim } from '../decorators/validation/is-string-with-trim.decorator';
 import { ObjectIdValidationPipe } from '../pipes/object-id-validation.pipe';
+
+// CoreConfig is stubbed below. Mock its ESM dependency during module loading.
+jest.mock('@nestjs/config', () => ({ ConfigService: class ConfigService {} }));
 
 class CommentInputDto {
   @IsStringWithTrim(1, 300)
@@ -185,7 +189,10 @@ describe('Exception filters HTTP contract', () => {
     const module = await Test.createTestingModule({
       imports: [CoreModule],
       controllers: [CoreErrorsController],
-    }).compile();
+    })
+      .overrideProvider(CoreConfig)
+      .useValue({})
+      .compile();
 
     app = module.createNestApplication();
     setupGlobalPipes(app);
